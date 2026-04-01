@@ -2,43 +2,18 @@ import { motion } from "framer-motion";
 
 // Assets
 import backgroundImg from "../assets/background.jpg";
-import logoGame from "../assets/logo-game.png";
 import logoKozocom from "../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
+import { PRIZES } from "../prizes";
 
-import frame1st from "../assets/1st-frame.svg";
-import frame2nd from "../assets/2nd-frame.svg";
-import frame3rd from "../assets/3rd-frame.svg";
-import img1st from "../assets/1st.png";
-import img2nd from "../assets/2nd.png";
-import img3rd from "../assets/3rd.png";
+const handleEnterKey = (event, handler) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    handler();
+  }
+};
 
-const PRIZES = [
-  {
-    label: "2nd PRIZE",
-    name: "SMART WATCH MIBAND 10",
-    frame: frame2nd,
-    image: img2nd,
-    labelBg: "linear-gradient(180deg, #35A3EF 0%, #0039BB 100%)",
-  },
-  {
-    label: "1st PRIZE",
-    name: "SCREEN: LG 24K",
-    frame: frame1st,
-    image: img1st,
-    labelBg: "linear-gradient(180deg, #FFD54F 0%, #FF8F00 100%)",
-    isMain: true,
-  },
-  {
-    label: "3rd PRIZE",
-    name: "KEYBOARD AULA F75",
-    frame: frame3rd,
-    image: img3rd,
-    labelBg: "linear-gradient(180deg, #F38B55 0%, #A64B21 100%)",
-  },
-];
-
-export default function PrizeScreen({ onBack }) {
+export default function PrizeScreen({ onBack, onSelectPrize }) {
   return (
     <div
       className="relative w-full h-screen flex flex-col items-center overflow-hidden"
@@ -81,11 +56,9 @@ export default function PrizeScreen({ onBack }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <img
-          src={logoGame}
-          alt="Lottery Game"
-          className="w-[360px] md:w-[480px] lg:w-[560px] object-contain"
-        />
+        <div className="text-white text-center font-extrabold tracking-[0.18em] uppercase text-[24px] md:text-[32px] drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]">
+          Chọn giải thưởng
+        </div>
       </motion.div>
 
       {/* ── Prizes Section ── */}
@@ -93,14 +66,15 @@ export default function PrizeScreen({ onBack }) {
         <div className="flex items-end justify-center gap-6 md:gap-10 lg:gap-14">
           {PRIZES.map((prize, i) => (
             <motion.div
-              key={prize.label}
+              key={prize.id}
               className="flex flex-col items-center"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.15 }}
             >
               {/* Prize Label Badge */}
-              <div
+              <motion.div
+                layoutId={`prize-badge-${prize.id}`}
                 className="rounded-full px-5 py-1.5 text-white font-bold text-sm md:text-base z-20 relative"
                 style={{
                   background: prize.labelBg,
@@ -110,24 +84,31 @@ export default function PrizeScreen({ onBack }) {
                 }}
               >
                 {prize.label}
-              </div>
+              </motion.div>
 
               {/* Frame + Product Image */}
-              <div
-                className="relative flex items-center justify-center"
+              <motion.button
+                type="button"
+                layoutId={`prize-card-${prize.id}`}
+                className="relative flex items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-[28px] cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-transform"
                 style={{
                   width: prize.isMain ? "320px" : "240px",
                   height: prize.isMain ? "320px" : "240px",
                 }}
+                aria-label={`Xem chi tiết ${prize.label}`}
+                onClick={() => onSelectPrize?.(prize.id)}
+                onKeyDown={(e) => handleEnterKey(e, () => onSelectPrize?.(prize.id))}
               >
                 {/* Frame SVG */}
-                <img
+                <motion.img
+                  layoutId={`prize-frame-${prize.id}`}
                   src={prize.frame}
                   alt=""
                   className="absolute inset-0 w-full h-full object-contain"
                 />
                 {/* Product Image — centered inside frame */}
-                <img
+                <motion.img
+                  layoutId={`prize-image-${prize.id}`}
                   src={prize.image}
                   alt={prize.name}
                   className="relative z-10 object-contain"
@@ -136,17 +117,18 @@ export default function PrizeScreen({ onBack }) {
                     height: prize.isMain ? "65%" : "60%",
                   }}
                 />
-              </div>
+              </motion.button>
 
               {/* Product Name */}
-              <p
+              <motion.p
+                layoutId={`prize-name-${prize.id}`}
                 className="text-white font-bold text-center mt-2 tracking-wider uppercase"
                 style={{
                   fontSize: prize.isMain ? "18px" : "14px",
                 }}
               >
                 {prize.name}
-              </p>
+              </motion.p>
             </motion.div>
           ))}
         </div>
