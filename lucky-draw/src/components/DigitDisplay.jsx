@@ -35,15 +35,17 @@ export default function DigitDisplay({ status, value, index }) {
   const displayValue =
     status === 'idle' ? '—' : status === 'spinning' ? spinDigit : value;
 
+  const isRevealed = status === 'revealed';
+  const isSpinning = status === 'spinning';
+
   return (
-    <div className="relative flex items-center justify-center w-[120px] h-[180px] md:w-[160px] md:h-[220px] rounded-lg overflow-hidden">
+    <div className="relative flex h-[130px] w-[88px] items-center justify-center overflow-hidden rounded-[12px] border border-white/20 bg-[#041c4f] md:h-[168px] md:w-[112px]">
       {/* Dark panel background with inner border */}
       <div
-        className="absolute inset-0 rounded-lg"
+        className="absolute inset-[4px] rounded-[9px]"
         style={{
-          background: 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 50%, #1a1a1a 100%)',
-          border: '2px solid rgba(212, 164, 32, 0.4)',
-          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8), inset 0 2px 4px rgba(212,164,32,0.1)',
+          background: 'linear-gradient(180deg, #0c51d5 0%, #07359a 45%, #05286f 100%)',
+          boxShadow: 'inset 0 12px 18px rgba(255,255,255,0.08), inset 0 -12px 18px rgba(0,0,0,0.35)',
         }}
       />
 
@@ -51,7 +53,7 @@ export default function DigitDisplay({ status, value, index }) {
       <div
         className="absolute top-0 left-0 right-0 h-1/3 pointer-events-none"
         style={{
-          background: 'linear-gradient(180deg, rgba(212,164,32,0.08) 0%, transparent 100%)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%)',
         }}
       />
 
@@ -59,7 +61,7 @@ export default function DigitDisplay({ status, value, index }) {
       <div
         className="absolute bottom-0 left-0 right-0 h-1/4 pointer-events-none"
         style={{
-          background: 'linear-gradient(0deg, rgba(212,164,32,0.06) 0%, transparent 100%)',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.3) 0%, transparent 100%)',
         }}
       />
 
@@ -70,33 +72,27 @@ export default function DigitDisplay({ status, value, index }) {
           className="relative z-10 select-none"
           style={{
             fontFamily: "'Orbitron', monospace",
-            fontSize: 'clamp(60px, 8vw, 100px)',
+            fontSize: 'clamp(54px, 7vw, 88px)',
             fontWeight: 900,
-            color:
-              status === 'revealed'
-                ? '#f0d060'
-                : status === 'spinning'
-                ? '#d4a420'
-                : '#555',
-            textShadow:
-              status === 'revealed'
-                ? '0 0 20px rgba(240, 208, 96, 0.8), 0 0 40px rgba(212, 164, 32, 0.4)'
-                : status === 'spinning'
-                ? '0 0 8px rgba(212, 164, 32, 0.3)'
-                : 'none',
-            filter: status === 'spinning' ? 'blur(2px)' : 'blur(0px)',
+            color: isRevealed ? '#ffffff' : isSpinning ? '#d9ecff' : '#8ab2eb',
+            textShadow: isRevealed
+              ? '0 0 18px rgba(255,255,255,0.8), 0 0 36px rgba(104,180,255,0.55)'
+              : isSpinning
+              ? '0 0 10px rgba(130,198,255,0.45)'
+              : 'none',
+            filter: isSpinning ? 'blur(1.4px)' : 'blur(0px)',
           }}
-          initial={{ opacity: 0, y: status === 'spinning' ? -20 : 0, scale: 0.8 }}
+          initial={{ opacity: 0, y: isSpinning ? -14 : 0, scale: 0.86 }}
           animate={{
             opacity: 1,
             y: 0,
             scale: 1,
-            filter: status === 'spinning' ? 'blur(2px)' : 'blur(0px)',
+            filter: isSpinning ? 'blur(1.4px)' : 'blur(0px)',
           }}
-          exit={{ opacity: 0, y: 20, scale: 0.8 }}
+          exit={{ opacity: 0, y: 14, scale: 0.86 }}
           transition={{
-            duration: status === 'spinning' ? 0.05 : 0.4,
-            ease: status === 'revealed' ? [0.34, 1.56, 0.64, 1] : 'easeOut',
+            duration: isSpinning ? 0.05 : 0.35,
+            ease: isRevealed ? [0.34, 1.56, 0.64, 1] : 'easeOut',
           }}
         >
           {displayValue}
@@ -104,16 +100,16 @@ export default function DigitDisplay({ status, value, index }) {
       </AnimatePresence>
 
       {/* Glow ring when revealed */}
-      {status === 'revealed' && (
+      {isRevealed && (
         <motion.div
-          className="absolute inset-0 rounded-lg pointer-events-none"
+          className="pointer-events-none absolute inset-0 rounded-[12px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.45 }}
           style={{
             boxShadow:
-              'inset 0 0 20px rgba(240, 208, 96, 0.15), 0 0 15px rgba(212, 164, 32, 0.3)',
-            border: '2px solid rgba(240, 208, 96, 0.5)',
+              'inset 0 0 20px rgba(160,214,255,0.28), 0 0 16px rgba(98,173,255,0.45)',
+            border: '1px solid rgba(186,225,255,0.75)',
           }}
         />
       )}

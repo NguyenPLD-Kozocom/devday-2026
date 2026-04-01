@@ -38,7 +38,7 @@ const getPrizeTier = (seconds: number): PrizeTierConfig => {
   ) {
     return {
       tier: "near",
-      displayLabel: "Gấu + Quạt lụa",
+      displayLabel: "Gấu/Quạt lụa",
       imageSrc: gift1Img,
     };
   }
