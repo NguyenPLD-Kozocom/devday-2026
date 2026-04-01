@@ -2,7 +2,7 @@ import { useEffect, Fragment, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { HexagonTile } from './HexagonCell';
-import type { TileData } from '../App';
+import type { TileData } from '../types/game';
 
 const MESSAGES = {
   gift: {

@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
 import { HexagonTile } from './HexagonCell';
-import type { TileData } from '../App';
+import type { TileData } from '../types/game';
 
 interface CollectionTrayProps {
   tiles: TileData[];

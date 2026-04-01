@@ -164,6 +164,15 @@ body {
   z-index: 10;
 }
 
+.bg-start-game {
+  background-image: url('./assets/start_game_background.png');
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100vh;
+}
+
 @keyframes sun-shimmer {
   0% {
     transform: translateX(-200%) skewX(-20deg);

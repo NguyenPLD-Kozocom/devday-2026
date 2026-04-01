@@ -1,5 +1,5 @@
 import { HexagonSlot } from './HexagonCell';
-import type { CellData, TileData } from '../App';
+import type { CellData, TileData } from '../types/game';
 
 interface HexagonGridProps {
   cells: CellData[];

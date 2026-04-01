@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { TileData, CellData } from '../App';
+import type { TileData, CellData } from '../types/game';
 
 export function HexagonTile({ tile, inGrid, duration }: { tile: TileData | CellData, inGrid?: boolean, duration?: number }) {
   const isSpecial = tile.type === 'gift' || tile.type === 'boom' || tile.content.includes('Kozocom');
