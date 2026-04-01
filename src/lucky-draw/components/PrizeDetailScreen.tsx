@@ -7,7 +7,6 @@ import logoKozocom from "../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
 import { getPrizeById } from "../prizes";
 import preActiveSvg from "../assets/image.png";
-import linePrize from "../assets/line-prize.svg";
 import SlotMachine from "./SlotMachine";
 
 const handleEnterKey = (event, handler) => {
@@ -19,8 +18,14 @@ const handleEnterKey = (event, handler) => {
 
 export default function PrizeDetailScreen({ prizeId, onBack }) {
   const prize = getPrizeById(prizeId);
+  const detailImageSize = prize.detailImageSize ?? {
+    width: "420px",
+    height: "480px",
+  };
+  const detailImagePosition = prize.detailImagePosition ?? {
+    bottom: "0px",
+  };
   const MotionButton = motion.button;
-  const MotionDiv = motion.div;
   const MotionImg = motion.img;
 
   const ticketSlotRefs = useRef([null, null, null]);
@@ -83,13 +88,13 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
       </div>
 
       <div className="relative w-full aspect-video h-full overflow-hidden ">
-        <div className="absolute left-12 top-24 inset-0 px-6 md:px-12 pt-20 md:pt-24 pb-14 md:pb-14 flex items-center justify-between gap-10">
+        <div className="absolute left-12 top-12 inset-0 px-6 md:px-12 pt-20 md:pt-24 pb-14 md:pb-14 flex items-center justify-between gap-10">
           {/* Left: Prize + Ticket */}
           <div className="relative flex-[0_0_66%] h-full">
             {/* Ticket (white background like Figma) */}
             <div className="absolute left-0 right-0 top-0 bottom-0 flex items-start">
               <div
-                className="relative w-full h-[80%] rounded-[14px] p-[5px] shadow-[0_14px_48px_rgba(0,0,0,0.38)] md:rounded-[16px] md:p-1.5"
+                className="relative w-full h-[90%] rounded-[14px] p-[5px] shadow-[0_14px_48px_rgba(0,0,0,0.38)] md:rounded-[16px] md:p-1.5"
                 style={{ background: prize.panelGradient }}
               >
                 <div className="relative flex h-full min-h-[200px] w-full min-w-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_12px_rgba(15,23,42,0.04)] md:min-h-[240px] md:rounded-[12px]">
@@ -131,25 +136,22 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
             </div>
 
             {/* Prize block (bottom-left like Figma) */}
-            <div className="absolute left-0 bottom-0 z-30 flex items-end gap-4">
-              <div className="relative h-[450px] w-[320px] shrink-0">
+            <div className="absolute left-0 bottom-0 z-30 flex items-end">
+              <div
+                className="relative shrink-0"
+                style={{
+                  width: detailImageSize.width,
+                  height: detailImageSize.height,
+                }}
+              >
                 <MotionImg
                   layoutId={`prize-image-${prize.id}`}
-                  src={prize.image}
+                  src={prize.detailImage ?? prize.image}
                   alt={prize.name}
-                  className="absolute bottom-0 left-0 h-full w-full object-contain object-bottom"
+                  className="absolute left-0 h-full w-full object-contain object-bottom-left"
+                  style={{ bottom: detailImagePosition.bottom }}
                 />
               </div>
-              <MotionDiv
-                layoutId={`prize-name-${prize.id}`}
-                className="-translate-y-[80px] inline-flex min-h-[34px] items-center bg-center bg-no-repeat bg-contain px-4 md:min-h-[38px] md:px-5 text-white font-extrabold tracking-[0.16em] uppercase text-[16px] md:text-[18px]"
-                style={{ backgroundImage: `url(${linePrize})` }}
-              >
-                {prize.name}
-              </MotionDiv>
-              {/* <div className="mt-1 text-white/85 text-[12px] md:text-[13px] tracking-[0.12em] uppercase">
-                  (FHD / IPS / 120HZ)
-                </div> */}
             </div>
           </div>
 

@@ -67,7 +67,7 @@ export default function VerticalReel({
   const slotCenterY = slotH / 2;
 
   const frameClass = compact
-    ? "h-[min(88vw,800px)] w-[min(88vw,500px)] max-h-[800px] max-w-[800px]"
+    ? "h-[min(90vw,950px)] w-[min(90vw,620px)] max-h-[950px] max-w-[620px]"
     : "h-[1000px] w-[720px] md:w-[820px]";
 
   const fontSize = compact
@@ -89,7 +89,7 @@ export default function VerticalReel({
   };
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative -left-[20px] shrink-0">
       <div
         className={`relative overflow-hidden rounded-[2px] ${frameClass}`}
         style={shellStyle}
@@ -208,7 +208,7 @@ export default function VerticalReel({
 
       <div
         className={`absolute top-1/2 right-14 z-30 -translate-y-1/2 origin-right ${
-          compact ? "scale-75 md:scale-90" : "scale-95 md:scale-100"
+          compact ? "scale-90 md:scale-105" : "scale-105 md:scale-115"
         }`}
       >
         <Lever onPull={onPull} disabled={pullDisabled} />
