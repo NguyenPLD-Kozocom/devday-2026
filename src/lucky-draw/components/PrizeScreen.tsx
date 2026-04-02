@@ -4,8 +4,8 @@ import logoGame from "../assets/logo-game.png";
 // Assets
 import backgroundImg from "../assets/background.jpg";
 import logoKozocom from "../../assets/logo.png";
-import speakerIcon from "../assets/speaker.png";
 import { PRIZES } from "../prizes";
+import SoundToggleButton from "./SoundToggleButton";
 
 const handleEnterKey = (event, handler) => {
   if (event.key === "Enter" || event.key === " ") {
@@ -55,16 +55,7 @@ export default function PrizeScreen({ onBack, onSelectPrize }) {
           alt="KOZOCOM"
           className="h-6 md:h-8 object-contain"
         />
-        <button
-          className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform"
-          aria-label="Toggle sound"
-        >
-          <img
-            src={speakerIcon}
-            alt="Speaker"
-            className="w-full h-full object-contain"
-          />
-        </button>
+        <SoundToggleButton className="active:scale-95" />
       </motion.div>
 
       {/* ── Title Logo ── */}

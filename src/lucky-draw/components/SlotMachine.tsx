@@ -8,6 +8,30 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import VerticalReel from "./VerticalReel";
 import Confetti from "./Confetti";
+import spinSfxUrl from "../assets/spin.mp3";
+import tadaSfxUrl from "../assets/tada.mp3";
+import { useSfxOverlayWhile, useSoundSettings } from "../SoundSettingsContext";
+
+/** Bay lên + phóng to tại ô quay (giây), sau đó bay chậm vào ô kết quả */
+const FLY_RISE_DURATION_SEC = 4;
+const FLY_TO_SLOT_DURATION_SEC = 2.5;
+const FLY_DIGIT_DURATION_SEC = FLY_RISE_DURATION_SEC + FLY_TO_SLOT_DURATION_SEC;
+const FLY_T_RISE = FLY_RISE_DURATION_SEC / FLY_DIGIT_DURATION_SEC;
+
+/** Khớp số ô spin (VerticalReel — span giữa khi locked) */
+const REEL_DIGIT_FONT_SIZE = (compact) =>
+  compact ? "clamp(124px, 24vw, 176px)" : "clamp(152px, 22vw, 216px)";
+const REEL_DIGIT_TEXT_SHADOW = "0 1px 0 rgba(0,0,0,0.28)";
+
+/** Số đang hiển thị tại ô giữa reel (ưu tiên DOM = đúng pixel đang thấy) */
+const parseDigitFromReelEl = (el) => {
+  const raw = el?.textContent ?? "";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+  const n = parseInt(digits[digits.length - 1], 10);
+  if (Number.isFinite(n) && n >= 0 && n <= 9) return n;
+  return null;
+};
 
 interface SlotMachineProps {
   compact?: boolean;
@@ -15,19 +39,6 @@ interface SlotMachineProps {
   onBoardStateChange?:
     | ((state: { board: (number | null)[]; results: number[] }) => void)
     | null;
-}
-
-interface FlyPayload {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
-  digit: number;
-  roundIndex: number;
-}
-
-interface LandedPulse {
-  x: number;
-  y: number;
-  digit: number;
 }
 
 /**
@@ -52,24 +63,74 @@ export default function SlotMachine({
   const [idleDigit, setIdleDigit] = useState(0);
   const [board, setBoard] = useState<(number | null)[]>([null, null, null]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [flyPos, setFlyPos] = useState<FlyPayload | null>(null);
-  const [landedPulse, setLandedPulse] = useState<LandedPulse | null>(null);
-  const reelWrapRef = useRef<HTMLDivElement>(null);
-  const internalBoardRefs = useRef<(HTMLDivElement | null)[]>([
-    null,
-    null,
-    null,
-  ]);
+  const [flyPos, setFlyPos] = useState(null);
+  const [landedPulse, setLandedPulse] = useState(null);
+  const [reelSpinFromDigit, setReelSpinFromDigit] = useState(null);
+  const [reelIdleShowsDigit, setReelIdleShowsDigit] = useState(true);
+  const reelWrapRef = useRef(null);
+  const internalBoardRefs = useRef([null, null, null]);
   const boardRefs = externalBoardSlotRefs ?? internalBoardRefs;
   const showInlineBoard = !externalBoardSlotRefs;
   const spinDoneRef = useRef(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const resultsRef = useRef(results);
-  const flyPayloadRef = useRef<FlyPayload | null>(null);
+  const flyPayloadRef = useRef(null);
+  const spinAudioRef = useRef(null);
+  const tadaAudioRef = useRef(null);
+  const tadaPlayedForFlyKeyRef = useRef(null);
+  const { soundEnabled } = useSoundSettings();
+  useSfxOverlayWhile(phase === "spinning" && soundEnabled);
+
+  resultsRef.current = results;
 
   useEffect(() => {
-    resultsRef.current = results;
-  }, [results]);
+    return () => {
+      const a = spinAudioRef.current;
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+      }
+      const t = tadaAudioRef.current;
+      if (t) {
+        t.pause();
+        t.currentTime = 0;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!flyPos || !soundEnabled) return;
+    const flyKey = `${spinKey}-${flyPos.roundIndex}`;
+    if (tadaPlayedForFlyKeyRef.current === flyKey) return;
+    tadaPlayedForFlyKeyRef.current = flyKey;
+
+    let audio = tadaAudioRef.current;
+    if (!audio) {
+      audio = new Audio(tadaSfxUrl);
+      audio.loop = false;
+      tadaAudioRef.current = audio;
+    }
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  }, [flyPos, soundEnabled, spinKey]);
+
+  useEffect(() => {
+    if (phase === "spinning") return;
+    const a = spinAudioRef.current;
+    if (!a) return;
+    a.pause();
+    a.currentTime = 0;
+  }, [phase]);
+
+  useEffect(() => {
+    const a = spinAudioRef.current;
+    if (!a) return;
+    if (soundEnabled && phase === "spinning") {
+      void a.play().catch(() => {});
+    } else {
+      a.pause();
+    }
+  }, [soundEnabled, phase]);
 
   useEffect(() => {
     onBoardStateChange?.({ board, results });
@@ -89,14 +150,28 @@ export default function SlotMachine({
     if (phase === "spinning") spinDoneRef.current = false;
   }, [phase, spinKey]);
 
-  const completeRoundAfterDigit = useCallback((ri: number) => {
-    const val = resultsRef.current[ri];
+  useEffect(() => {
+    if (phase === "idle") setReelSpinFromDigit(null);
+  }, [phase]);
+
+  const completeRoundAfterDigit = useCallback((ri, digitOverride) => {
+    const val =
+      digitOverride !== undefined && digitOverride !== null
+        ? digitOverride
+        : resultsRef.current[ri];
     setIdleDigit(val);
     setBoard((prev) => {
       const next = [...prev];
       next[ri] = val;
       return next;
     });
+    setResults((prev) => {
+      if (prev[ri] === val) return prev;
+      const next = [...prev];
+      next[ri] = val;
+      return next;
+    });
+    setReelIdleShowsDigit(false);
     if (ri < 2) {
       setRoundIndex(ri + 1);
       setPhase("idle");
@@ -120,10 +195,13 @@ export default function SlotMachine({
       if (!reelEl || !slotEl) return false;
       const a = reelEl.getBoundingClientRect();
       const b = slotEl.getBoundingClientRect();
+      const fromState = resultsRef.current[roundIndex];
+      const digitFromDom = parseDigitFromReelEl(reelEl);
+      const digit = digitFromDom !== null ? digitFromDom : fromState;
       const payload = {
         from: { x: a.left + a.width / 2, y: a.top + a.height / 2 },
         to: { x: b.left + b.width / 2, y: b.top + b.height / 2 },
-        digit: resultsRef.current[roundIndex],
+        digit,
         roundIndex,
       };
       flyPayloadRef.current = payload;
@@ -147,15 +225,21 @@ export default function SlotMachine({
 
   useEffect(() => {
     if (phase !== "celebration") return;
+    /** Màn vé (external board): giữ kết quả, chỉ về idle để kéo cần được bật lại */
+    if (externalBoardSlotRefs) {
+      const id = window.setTimeout(() => setPhase("idle"), 0);
+      return () => clearTimeout(id);
+    }
     const t = setTimeout(() => {
       setPhase("idle");
       setBoard([null, null, null]);
       setIdleDigit(0);
       setRoundIndex(0);
       setShowConfetti(false);
+      setReelIdleShowsDigit(true);
     }, 5200);
     return () => clearTimeout(t);
-  }, [phase]);
+  }, [phase, externalBoardSlotRefs]);
 
   const handleSpinComplete = useCallback(() => {
     if (spinDoneRef.current) return;
@@ -174,11 +258,13 @@ export default function SlotMachine({
       y: payload.to.y,
       digit: payload.digit,
     });
-    completeRoundAfterDigit(payload.roundIndex);
+    completeRoundAfterDigit(payload.roundIndex, payload.digit);
   }, [completeRoundAfterDigit]);
 
   const handlePull = useCallback(() => {
     if (phase !== "idle") return;
+
+    const digitShownOnReel = idleDigit;
 
     const isNewGame = board.every((b) => b === null);
 
@@ -191,22 +277,38 @@ export default function SlotMachine({
       ]);
       setRoundIndex(0);
       setShowConfetti(false);
+      setReelIdleShowsDigit(true);
       timeoutsRef.current.forEach(clearTimeout);
       timeoutsRef.current = [];
     }
 
     setFlyPos(null);
+    setReelSpinFromDigit(digitShownOnReel);
     setSpinKey((k) => k + 1);
     setPhase("spinning");
-  }, [phase, board]);
+
+    let audio = spinAudioRef.current;
+    if (!audio) {
+      audio = new Audio(spinSfxUrl);
+      audio.loop = true;
+      spinAudioRef.current = audio;
+    }
+    audio.currentTime = 0;
+    if (soundEnabled) {
+      void audio.play().catch(() => {});
+    }
+  }, [phase, board, idleDigit, soundEnabled]);
 
   const reelMode =
     phase === "spinning" ? "spinning" : phase === "flying" ? "locked" : "idle";
 
   const isCelebration = phase === "celebration";
+  /** Nền xanh để chữ trắng giữ đúng màu khi số bay vào (không cần đổi sang màu tối như nền sáng) */
   const boardSlotClass = compact
-    ? "flex h-14 w-12 items-center justify-center rounded-[10px] border border-[#4fa6ff]/35 bg-[#041c4f] md:h-16 md:w-14"
-    : "flex h-20 w-16 items-center justify-center rounded-[14px] border border-[#4fa6ff]/35 bg-[#041c4f] md:h-[92px] md:w-20";
+    ? "flex h-14 w-12 items-center justify-center rounded-[10px] border border-[#4fa6ff]/45 bg-[#0b4d8f] md:h-16 md:w-14"
+    : "flex h-20 w-16 items-center justify-center rounded-[14px] border border-[#4fa6ff]/45 bg-[#0b4d8f] md:h-[92px] md:w-20";
+
+  const flyDigitRisePx = compact ? 100 : 140;
 
   return (
     <div
@@ -266,12 +368,14 @@ export default function SlotMachine({
 
       <div ref={reelWrapRef}>
         <VerticalReel
-          key={spinKey}
           spinKey={spinKey}
           targetValue={results[roundIndex]}
           idleValue={idleDigit}
+          spinFromDigit={reelSpinFromDigit}
           mode={reelMode}
           compact={compact}
+          idleCenterEmpty={phase === "idle" && !reelIdleShowsDigit}
+          hideCenterDigit={phase === "flying" && flyPos != null}
           onPull={handlePull}
           pullDisabled={phase !== "idle"}
           onSpinComplete={handleSpinComplete}
@@ -281,43 +385,87 @@ export default function SlotMachine({
       <AnimatePresence>
         {flyPos && (
           <MotionDiv
-            key={`fly-${flyPos.roundIndex}`}
-            className="pointer-events-none fixed z-[60] select-none"
+            key={`fly-${spinKey}-${flyPos.roundIndex}`}
+            className="pointer-events-none fixed z-[60] flex select-none items-center justify-center"
             style={{
               left: flyPos.from.x,
               top: flyPos.from.y,
               translateX: "-50%",
               translateY: "-50%",
-              fontFamily: "'Oswald', sans-serif",
-              fontWeight: 900,
-              fontSize: compact
-                ? "clamp(40px, 8vw, 56px)"
-                : "clamp(54px, 7vw, 88px)",
-              color: externalBoardSlotRefs ? "#0f172a" : "#ffffff",
-              textShadow: externalBoardSlotRefs
-                ? "0 2px 14px rgba(15,23,42,0.12)"
-                : "0 0 18px rgba(255,255,255,0.85), 0 0 32px rgba(104,180,255,0.6)",
             }}
             initial={{
               left: flyPos.from.x,
               top: flyPos.from.y,
-              scale: 1,
               opacity: 1,
             }}
             animate={{
-              left: flyPos.to.x,
-              top: flyPos.to.y,
-              scale: 0.92,
+              left: [flyPos.from.x, flyPos.from.x, flyPos.to.x],
+              top: [flyPos.from.y, flyPos.from.y - flyDigitRisePx, flyPos.to.y],
               opacity: 1,
             }}
             transition={{
-              duration: 0.92,
-              ease: [0.22, 0.61, 0.36, 1],
+              duration: FLY_DIGIT_DURATION_SEC,
+              times: [0, FLY_T_RISE, 1],
+              ease: [
+                [0.42, 0, 0.58, 1],
+                [0.25, 0.1, 0.25, 1],
+              ],
             }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 1, transition: { duration: 0 } }}
             onAnimationComplete={handleFlyAnimationComplete}
           >
-            {flyPos.digit}
+            <MotionDiv
+              className="relative flex items-center justify-center"
+              initial={{ scale: 1 }}
+              animate={{
+                scale: [1, 1.68, 0.36],
+              }}
+              transition={{
+                duration: FLY_DIGIT_DURATION_SEC,
+                times: [0, FLY_T_RISE, 1],
+                ease: [
+                  [0.42, 0, 0.58, 1],
+                  [0.25, 0.1, 0.25, 1],
+                ],
+              }}
+            >
+              <MotionDiv
+                aria-hidden
+                className="pointer-events-none absolute rounded-full"
+                style={{
+                  width: compact ? "min(140px, 42vw)" : "min(200px, 38vw)",
+                  height: compact ? "min(140px, 42vw)" : "min(200px, 38vw)",
+                  background:
+                    "radial-gradient(circle, rgba(255,248,220,0.75) 0%, rgba(130,200,255,0.45) 38%, transparent 72%)",
+                  filter: "blur(14px)",
+                }}
+                initial={{ opacity: 0, scale: 0.55 }}
+                animate={{
+                  opacity: [0, 0.98, 0.88, 0.55, 0],
+                  scale: [0.55, 1.22, 1.12, 1, 0.85],
+                }}
+                transition={{
+                  duration: FLY_DIGIT_DURATION_SEC,
+                  times: [0, 0.12, 0.28, 0.52, FLY_T_RISE],
+                  ease: "easeOut",
+                }}
+              />
+              <span
+                className="relative z-10"
+                style={{
+                  fontFamily: "'Oswald', sans-serif",
+                  fontWeight: 700,
+                  fontSize: REEL_DIGIT_FONT_SIZE(compact),
+                  letterSpacing: "0.01em",
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1,
+                  color: "#ffffff",
+                  textShadow: REEL_DIGIT_TEXT_SHADOW,
+                }}
+              >
+                {flyPos.digit}
+              </span>
+            </MotionDiv>
           </MotionDiv>
         )}
       </AnimatePresence>
@@ -337,15 +485,14 @@ export default function SlotMachine({
               fontSize: compact
                 ? "clamp(34px, 7vw, 50px)"
                 : "clamp(46px, 6vw, 74px)",
-              color: externalBoardSlotRefs ? "#0f172a" : "#ffffff",
-              textShadow: externalBoardSlotRefs
-                ? "0 2px 10px rgba(15,23,42,0.18)"
-                : "0 0 12px rgba(255,255,255,0.8)",
+              color: "#ffffff",
+              textShadow:
+                "0 0 10px rgba(255,255,255,0.45), 0 1px 0 rgba(0,0,0,0.2)",
             }}
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: [0.7, 1.12, 1], opacity: [0, 1, 0] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut", times: [0, 0.5, 1] }}
+            initial={{ scale: 1.38, opacity: 1 }}
+            animate={{ scale: 0.68, opacity: 1 }}
+            exit={{ opacity: 1, transition: { duration: 0 } }}
+            transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {landedPulse.digit}
           </MotionDiv>
@@ -353,7 +500,7 @@ export default function SlotMachine({
       </AnimatePresence>
 
       <AnimatePresence>
-        {isCelebration && (
+        {isCelebration && !externalBoardSlotRefs && (
           <MotionDiv
             className="fixed inset-0 z-[55] flex flex-col items-center justify-center gap-6 bg-[radial-gradient(circle_at_center,rgba(6,28,92,0.92)_0%,rgba(2,12,40,0.97)_100%)] px-6"
             initial={{ opacity: 0 }}

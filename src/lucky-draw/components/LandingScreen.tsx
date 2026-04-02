@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import backgroundImg from "../assets/background.jpg";
 import logoGame from "../assets/logo-game.png";
 import logoKozocom from "../../assets/logo.png";
-import speakerIcon from "../assets/speaker.png";
 import nextSvg from "../assets/next.svg";
 import preDisableSvg from "../assets/preDisable.svg";
 import preActiveSvg from "../assets/image.png";
 import playNowSvg from "../assets/playnow.svg";
+import SoundToggleButton from "./SoundToggleButton";
 
 // ── Screen data ──
 // Each screen has a `layout` key:
@@ -131,16 +131,7 @@ export default function LandingScreen({ onNext }) {
           alt="KOZOCOM"
           className="h-6 md:h-8 object-contain"
         />
-        <button
-          className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden cursor-pointer hover:scale-110 transition-transform"
-          aria-label="Toggle sound"
-        >
-          <img
-            src={speakerIcon}
-            alt="Speaker"
-            className="w-full h-full object-contain"
-          />
-        </button>
+        <SoundToggleButton />
       </motion.div>
 
       {/* ── Title Logo — 110px from top ── */}
