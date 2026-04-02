@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import logoKozocom from '../assets/logo_kozocom.png';
-import gameBanner from '../assets/game_banner.png';
-import buttonDefault from '../assets/button_default.png';
-import buttonSoundOn from '../assets/button_sound_on.png';
-import buttonSoundOff from '../assets/button_sound_off.png';
+import { motion } from "framer-motion";
+import logoKozocom from "../assets/logo_kozocom.png";
+import gameBanner from "../assets/game_banner.png";
+import buttonDefault from "../assets/button_default.png";
+import buttonSoundOn from "../assets/button_sound_on.png";
+import buttonSoundOff from "../assets/button_sound_off.png";
 
 interface StartScreenProps {
   onStart: () => void;
@@ -12,7 +12,12 @@ interface StartScreenProps {
   toggleMute: () => void;
 }
 
-export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: StartScreenProps) {
+export function StartScreen({
+  onStart,
+  onShowRules,
+  isMuted,
+  toggleMute,
+}: StartScreenProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-start-game select-none">
       {/* Background with honeycomb and dripping honey is handled via CSS class bg-start-game */}
@@ -24,7 +29,11 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 flex flex-col items-center gap-4 mt-24 mb-4"
       >
-        <img src={logoKozocom} alt="Kozocom" className="h-9 sm:h-11 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] contrast-125" />
+        <img
+          src={logoKozocom}
+          alt="Kozocom"
+          className="h-9 sm:h-11 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] contrast-125"
+        />
       </motion.div>
 
       {/* Hero / Title */}
@@ -34,7 +43,7 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
         transition={{
           duration: 1,
           ease: "backOut",
-          delay: 0.2
+          delay: 0.2,
         }}
         className="relative z-10 flex flex-col items-center mt-12"
       >
@@ -48,7 +57,7 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
           transition={{
             duration: 4,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
       </motion.div>
@@ -60,9 +69,13 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onStart}
-          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300"
+          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
-          <img src={buttonDefault} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img
+            src={buttonDefault}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           <span className="relative z-10 text-white text-xl sm:text-2xl font-black tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
             CHƠI NGAY
           </span>
@@ -73,9 +86,13 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onShowRules}
-          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300"
+          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
-          <img src={buttonDefault} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img
+            src={buttonDefault}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           <span className="relative z-10 text-white text-xl sm:text-2xl font-black tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
             LUẬT & QUÀ
           </span>
@@ -88,7 +105,7 @@ export function StartScreen({ onStart, onShowRules, isMuted, toggleMute }: Start
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
         onClick={toggleMute}
-        className="absolute bottom-8 right-8 z-20 w-14 h-14 sm:w-16 sm:h-16 active:scale-90 transition-transform"
+        className="absolute bottom-8 right-8 z-20 w-14 h-14 sm:w-16 sm:h-16 active:scale-90 transition-transform cursor-pointer"
       >
         <img
           src={isMuted ? buttonSoundOff : buttonSoundOn}

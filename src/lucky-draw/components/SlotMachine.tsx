@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   useState,
   useEffect,
@@ -9,6 +8,27 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import VerticalReel from "./VerticalReel";
 import Confetti from "./Confetti";
+
+interface SlotMachineProps {
+  compact?: boolean;
+  boardSlotRefs?: React.MutableRefObject<(HTMLDivElement | null)[]> | null;
+  onBoardStateChange?:
+    | ((state: { board: (number | null)[]; results: number[] }) => void)
+    | null;
+}
+
+interface FlyPayload {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  digit: number;
+  roundIndex: number;
+}
+
+interface LandedPulse {
+  x: number;
+  y: number;
+  digit: number;
+}
 
 /**
  * SlotMachine — Mỗi lượt quay cần kéo cần một lần (3 lần kéo = 3 lượt).
@@ -21,25 +41,31 @@ export default function SlotMachine({
   compact = false,
   boardSlotRefs: externalBoardSlotRefs = null,
   onBoardStateChange = null,
-}) {
+}: SlotMachineProps) {
   const MotionDiv = motion.div;
-  const [phase, setPhase] = useState("idle");
+  const [phase, setPhase] = useState<
+    "idle" | "spinning" | "flying" | "celebration"
+  >("idle");
   const [roundIndex, setRoundIndex] = useState(0);
   const [spinKey, setSpinKey] = useState(0);
-  const [results, setResults] = useState([0, 0, 0]);
+  const [results, setResults] = useState<number[]>([0, 0, 0]);
   const [idleDigit, setIdleDigit] = useState(0);
-  const [board, setBoard] = useState([null, null, null]);
+  const [board, setBoard] = useState<(number | null)[]>([null, null, null]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [flyPos, setFlyPos] = useState(null);
-  const [landedPulse, setLandedPulse] = useState(null);
-  const reelWrapRef = useRef(null);
-  const internalBoardRefs = useRef([null, null, null]);
+  const [flyPos, setFlyPos] = useState<FlyPayload | null>(null);
+  const [landedPulse, setLandedPulse] = useState<LandedPulse | null>(null);
+  const reelWrapRef = useRef<HTMLDivElement>(null);
+  const internalBoardRefs = useRef<(HTMLDivElement | null)[]>([
+    null,
+    null,
+    null,
+  ]);
   const boardRefs = externalBoardSlotRefs ?? internalBoardRefs;
   const showInlineBoard = !externalBoardSlotRefs;
   const spinDoneRef = useRef(false);
-  const timeoutsRef = useRef([]);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const resultsRef = useRef(results);
-  const flyPayloadRef = useRef(null);
+  const flyPayloadRef = useRef<FlyPayload | null>(null);
 
   useEffect(() => {
     resultsRef.current = results;
@@ -63,7 +89,7 @@ export default function SlotMachine({
     if (phase === "spinning") spinDoneRef.current = false;
   }, [phase, spinKey]);
 
-  const completeRoundAfterDigit = useCallback((ri) => {
+  const completeRoundAfterDigit = useCallback((ri: number) => {
     const val = resultsRef.current[ri];
     setIdleDigit(val);
     setBoard((prev) => {

@@ -4,8 +4,12 @@ import backgroundMp4 from "./assets/background.mp4";
 import gift1Img from "./assets/gift-1.png";
 import gift2Img from "./assets/gift-2.png";
 import gift3Img from "./assets/gift-3.png";
+import tenSecond from "./assets/10s.svg";
+import logo from "../assets/logo.png";
 import soundMp4 from "./assets/sound.mp4";
 import clapMp3 from "./assets/clap.mp3";
+import { cn } from "@/utils/cn";
+import { GiftGroup } from "./components/GiftGroup";
 
 type GameState = "idle" | "running" | "result";
 
@@ -33,8 +37,8 @@ const getPrizeTier = (seconds: number): PrizeTierConfig => {
   }
 
   if (
-    (seconds >= 9.91 && seconds <= 9.99) ||
-    (seconds >= 10.01 && seconds <= 10.09)
+    (seconds >= 9.95 && seconds <= 9.99) ||
+    (seconds >= 10.01 && seconds <= 10.05)
   ) {
     return {
       tier: "near",
@@ -223,15 +227,27 @@ function App() {
   const prizeTier = gameState === "result" ? getPrizeTier(timer) : null;
 
   return (
-    <div className="fixed inset-0 h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[#00247F]">
-      <img
-        src={mainImg}
-        alt=""
-        className="absolute inset-0 z-0 h-full w-full select-none object-fit object-center"
-        draggable={false}
-      />
-
-      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
+    <div
+      className="fixed inset-0 h-dvh max-h-dvh w-screen overflow-hidden bg-[#00247F] bg-center bg-no-repeat bg-size-[94%]"
+      style={{ backgroundImage: `url(${mainImg})` }}
+    >
+      <div className="absolute top-7.5 left-0 w-full h-full">
+        <div className="flex items-center justify-between pointer-events-none">
+          <img
+            src={tenSecond}
+            alt="10 Seconds"
+            className="h-[clamp(40px,80px)] w-auto"
+            draggable={false}
+          />
+          <img
+            src={logo}
+            alt="logo"
+            className="h-[clamp(24px,4vh,40px)] w-auto pr-[clamp(12px,3vw,80px)] object-contain"
+            draggable={false}
+          />
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-5 overflow-hidden">
         <div className="absolute inset-0 opacity-[0.1]">
           <video
             ref={backgroundVideoRef}
@@ -266,14 +282,14 @@ function App() {
       />
 
       <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center">
-        <div className="pointer-events-auto flex -translate-y-[min(6vh,3rem)] flex-col items-center gap-4 md:gap-6">
+        <div className="pointer-events-auto flex -translate-y-[max(50px,6.5vh)] flex-col items-center gap-[clamp(1rem,7vh,4rem)]">
           <p
-            className="font-technology text-[clamp(3rem,12vw,8rem)] leading-none tracking-tight text-white [text-shadow:2px_2px_8px_rgba(1,35,127,0.6)] [-webkit-text-stroke:1px_#DCFAFF]"
+            className="font-technology leading-none tracking-tight text-white [text-shadow:2px_2px_8px_rgba(1,35,127,0.6)] [-webkit-text-stroke:1px_#DCFAFF]"
             aria-live="polite"
             aria-atomic="true"
           >
             <span className="sr-only">{formatSecondsDisplay(timer)}</span>
-            <span className="text-[150px]">
+            <span className="text-[min(11.25rem,9.375vw)]">
               <FixedWidthTimeText
                 value={formatSecondsDisplay(timer)}
                 ariaHidden
@@ -285,7 +301,10 @@ function App() {
             <button
               type="button"
               onClick={handleStart}
-              className="px-10 pt-8 text-[clamp(1.25rem,3vw,2.5rem)] font-bold uppercase leading-[1.05] text-[#012A9E] transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#00247F]"
+              className={cn(
+                "w-[min(310px,16.15vw)] h-[min(90px,8.33vh)] text-center text-[min(2.5rem,2.08vw)] font-bold uppercase leading-1 text-[#012A9E] transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#00247F]",
+                "z-10 cursor-pointer bg-white border-[3px] border-[#9DD7FF] rounded-[60px] shadow-[0_4px_18px_rgba(0,0,0,0.25)] hover:brightness-[0.98]",
+              )}
             >
               Start
             </button>
@@ -295,11 +314,54 @@ function App() {
             <button
               type="button"
               onClick={handleStopClick}
-              className="px-10 pt-8 text-[clamp(1.25rem,3vw,2.5rem)] font-bold uppercase leading-[1.05] text-red-600 transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#00247F]"
+              className={cn(
+                "w-[min(310px,16.15vw)] h-[min(90px,8.33vh)] text-center text-[min(2.5rem,2.08vw)] font-bold uppercase leading-[1.05] text-red-600 transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#00247F]",
+                "z-10 cursor-pointer bg-[#FFE8E8] border-[3px] border-[#FF9D9D] rounded-[60px] shadow-[0_4px_18px_rgba(0,0,0,0.25)] hover:brightness-[0.98]",
+              )}
             >
               Stop
             </button>
           )}
+        </div>
+      </div>
+
+      <div
+        className="absolute -bottom-[2px] left-[min(80px,4.17vw)] right-[min(80px,4.17vw)] h-[min(420px,43.5vh)] rounded-tl-[40px] rounded-tr-[40px] p-[3px]"
+        style={{
+          background: "linear-gradient(180deg, #35A3EF 0%, #0039BB 100%)",
+        }}
+      >
+        <div
+          className="h-full w-full rounded-tl-[37px] rounded-tr-[37px] flex flex-col items-center justify-center pt-[min(24px,2.2vh)]"
+          style={{ background: "#0129A1CC" }}
+        >
+          <p className="text-white text-[min(1.875rem,1.5625vw)] font-main text-center mb-[clamp(10px,1.85vh,20px)]">
+            {gameState === "idle"
+              ? "Hoặc nhấn ENTER để bắt đầu"
+              : "Hoặc nhấn ENTER để dừng"}
+          </p>
+          <div className="flex items-center justify-center gap-[min(60px,3.125vw)]">
+            <GiftGroup
+              imageSrc={gift1Img}
+              imageClassName="w-[min(217px,11.3vw)] h-[min(135px,12.5vh)]"
+              label="Gấu/Quạt lụa"
+              description="9.95 - 9.99 hoặc 10.01 - 10.05"
+            />
+            <GiftGroup
+              imageSrc={gift2Img}
+              className="gap-4"
+              imageClassName="w-[min(383px,19.95vw)] h-[min(180px,16.67vh)]"
+              label="Áo thun + Gấu + Ly giữ nhiệt"
+              description="10.00"
+              descriptionClassName="text-[32px] font-bold leading-none"
+            />
+            <GiftGroup
+              imageSrc={gift3Img}
+              imageClassName="w-[min(195px,10.16vw)] h-[min(135px,12.5vh)]"
+              label="Bút + Kẹo mút"
+              description="Còn lại"
+            />
+          </div>
         </div>
       </div>
 
@@ -320,7 +382,7 @@ function App() {
                 </h2>
                 <div className="flex flex-col items-center gap-[30px] self-stretch">
                   <div className="flex flex-col items-center gap-[6px]">
-                    <p className="pb-6 text-center font-sans text-3xl font-light leading-[0.87] text-white [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]">
+                    <p className="pb-6 text-center font-main text-3xl font-light leading-[0.87] text-white [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]">
                       Bạn đạt được
                     </p>
                     <div
@@ -333,7 +395,7 @@ function App() {
                         />
                       </p>
                       <span
-                        className="font-sans text-[clamp(1.75rem,7vw,3.75rem)] font-medium uppercase leading-[0.87] text-white [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]"
+                        className="font-main text-[clamp(1.75rem,7vw,3.75rem)] font-medium uppercase leading-[0.87] text-white [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]"
                         aria-hidden
                       >
                         s
@@ -369,7 +431,7 @@ function App() {
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="flex min-h-[90px] w-full items-center justify-center rounded-[60px] border-[3px] border-[#9DD7FF] bg-white px-10 text-[clamp(1.25rem,3.2vw,2.5rem)] font-bold uppercase leading-[1.05] text-[#012A9E] shadow-[0_4px_18px_rgba(0,0,0,0.25)] transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(1,41,161,0.8)]"
+                    className="cursor-pointer flex min-h-[90px] w-full items-center justify-center rounded-[60px] border-[3px] border-[#9DD7FF] bg-white px-10 text-[clamp(1.25rem,3.2vw,2.5rem)] font-bold uppercase leading-[1.05] text-[#012A9E] shadow-[0_4px_18px_rgba(0,0,0,0.25)] transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(1,41,161,0.8)] font-main"
                   >
                     Chơi lại
                   </button>

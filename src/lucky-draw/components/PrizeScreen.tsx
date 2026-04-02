@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 // Assets
 import backgroundImg from "../assets/background.jpg";
-import logoKozocom from "../assets/logo.png";
+import logoKozocom from "../../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
 import { PRIZES } from "../prizes";
 
@@ -98,7 +98,9 @@ export default function PrizeScreen({ onBack, onSelectPrize }) {
                 }}
                 aria-label={`Xem chi tiết ${prize.label}`}
                 onClick={() => onSelectPrize?.(prize.id)}
-                onKeyDown={(e) => handleEnterKey(e, () => onSelectPrize?.(prize.id))}
+                onKeyDown={(e) =>
+                  handleEnterKey(e, () => onSelectPrize?.(prize.id))
+                }
               >
                 {/* Frame SVG */}
                 <motion.img
