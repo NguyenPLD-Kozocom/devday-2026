@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import buttonX from '../assets/button_X.png';
-import arrowActive from '../assets/arrow_active.png';
-import arrowInactive from '../assets/arrow_inactive.png';
-import cellKozocom from '../assets/honey_cell_kozocom.png';
-import cellBoom from '../assets/honey_cell_boom.png';
-import cellGift from '../assets/honey_cell_gift.png';
-import cellCombo3 from '../assets/honey_cell_kozocom_combo3.png';
-import giftBig from '../assets/gift_big.png';
-import giftMedium from '../assets/gift_medium.png';
-import giftSmall from '../assets/gift_small.png';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../../utils/cn";
+import buttonX from "../assets/button_X.png";
+import arrowActive from "../assets/arrow_active.png";
+import arrowInactive from "../assets/arrow_inactive.png";
+import cellKozocom from "../assets/honey_cell_kozocom.png";
+import cellBoom from "../assets/honey_cell_boom.png";
+import cellGift from "../assets/honey_cell_gift.png";
+import cellCombo3 from "../assets/honey_cell_kozocom_combo3.png";
+import giftBig from "../assets/gift_big.png";
+import giftMedium from "../assets/gift_medium.png";
+import giftSmall from "../assets/gift_small.png";
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -47,7 +48,11 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               onClick={onClose}
               className="absolute top-4 right-4 w-10 h-10 active:scale-90 transition-transform z-20"
             >
-              <img src={buttonX} alt="Close" className="w-full h-full object-contain" />
+              <img
+                src={buttonX}
+                alt="Close"
+                className="w-full h-full object-contain"
+              />
             </button>
 
             {/* Content Area */}
@@ -61,10 +66,18 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                     exit={{ x: -20, opacity: 0 }}
                     className="h-full flex flex-col"
                   >
-                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">Cách thức tham gia:</h2>
+                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
+                      Cách thức tham gia:
+                    </h2>
                     <ul className="text-[#6B441F] text-sm sm:text-base space-y-1 mb-6 list-disc pl-5 font-semibold">
-                      <li>Mỗi người chơi có tối đa 04 lần lựa chọn ô chữ trong một lượt chơi.</li>
-                      <li>Người chơi lần lượt chọn từng ô để khám phá nội dung bên trong.</li>
+                      <li>
+                        Mỗi người chơi có tối đa 04 lần lựa chọn ô chữ trong một
+                        lượt chơi.
+                      </li>
+                      <li>
+                        Người chơi lần lượt chọn từng ô để khám phá nội dung bên
+                        trong.
+                      </li>
                     </ul>
 
                     <div className="grid grid-cols-2 gap-4 flex-1">
@@ -96,9 +109,12 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                     exit={{ x: -20, opacity: 0 }}
                     className="h-full flex flex-col"
                   >
-                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">Danh sách quà:</h2>
+                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
+                      Danh sách quà:
+                    </h2>
                     <p className="text-[#6B441F] text-sm sm:text-base mb-6 font-semibold list-disc pl-5">
-                      • Mỗi trường hợp sẽ có các phần quà khác nhau, cùng khám phá
+                      • Mỗi trường hợp sẽ có các phần quà khác nhau, cùng khám
+                      phá
                     </p>
 
                     <div className="flex flex-col gap-3 flex-1 h-full">
@@ -127,11 +143,31 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
 
             {/* Navigation Arrows */}
             <div className="flex justify-center gap-6 mt-4">
-              <button onClick={handlePrev} className="active:scale-95 transition-transform">
-                <img src={currentPage === 0 ? arrowInactive : arrowActive} alt="Next" className="w-12 sm:w-16 h-auto" />
+              <button
+                onClick={handlePrev}
+                className={cn(
+                  "active:scale-95 transition-transform",
+                  currentPage !== 0 ? "cursor-pointer" : "cursor-default",
+                )}
+              >
+                <img
+                  src={currentPage === 0 ? arrowInactive : arrowActive}
+                  alt="Next"
+                  className="w-12 sm:w-16 h-auto"
+                />
               </button>
-              <button onClick={handleNext} className="active:scale-95 transition-transform">
-                <img src={currentPage === 1 ? arrowInactive : arrowActive} alt="Prev" className="w-12 sm:w-16 h-auto rotate-180" />
+              <button
+                onClick={handleNext}
+                className={cn(
+                  "active:scale-95 transition-transform",
+                  currentPage !== 1 ? "cursor-pointer" : "cursor-default",
+                )}
+              >
+                <img
+                  src={currentPage === 1 ? arrowInactive : arrowActive}
+                  alt="Prev"
+                  className="w-12 sm:w-16 h-auto rotate-180"
+                />
               </button>
             </div>
           </motion.div>
@@ -141,37 +177,87 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
   );
 }
 
-function RuleBlock({ icon, text, className = "" }: { icon: string, text: string, className?: string }) {
+function RuleBlock({
+  icon,
+  text,
+  className = "",
+}: {
+  icon: string;
+  text: string;
+  className?: string;
+}) {
   return (
-    <div className={`bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 sm:p-3 flex items-center gap-3 drop-shadow-sm ${className}`}>
+    <div
+      className={`bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 sm:p-3 flex items-center gap-3 drop-shadow-sm ${className}`}
+    >
       <div className="w-14 sm:w-18 h-12 sm:h-16 shrink-0">
         <img src={icon} alt="" className="w-full h-full object-contain" />
       </div>
-      <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold leading-tight flex-1">{text}</p>
+      <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold leading-tight flex-1">
+        {text}
+      </p>
     </div>
   );
 }
 
-function GiftBlock({ icons, label, comboIcon, prizeIcon, text, noIconText }: { icons?: string[], label?: string, comboIcon?: string, prizeIcon: string, text: string, noIconText?: string }) {
+function GiftBlock({
+  icons,
+  label,
+  comboIcon,
+  prizeIcon,
+  text,
+  noIconText,
+}: {
+  icons?: string[];
+  label?: string;
+  comboIcon?: string;
+  prizeIcon: string;
+  text: string;
+  noIconText?: string;
+}) {
   return (
     <div className="flex items-center gap-3 w-full h-[30%]">
       <div className="flex-1 h-full bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 flex items-center justify-center gap-2">
         {noIconText ? (
-          <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold text-center leading-tight px-4">{noIconText}</p>
+          <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold text-center leading-tight px-4">
+            {noIconText}
+          </p>
         ) : (
           <>
             <div className="h-10 sm:h-12">
               <img src={icons?.[0]} alt="" className="h-full object-contain" />
             </div>
-            {label && <span className="text-[#6B441F] font-bold text-xs">{label}</span>}
-            {comboIcon && <div className="h-10 sm:h-12"><img src={comboIcon} alt="" className="h-full object-contain" /></div>}
+            {label && (
+              <span className="text-[#6B441F] font-bold text-xs">{label}</span>
+            )}
+            {comboIcon && (
+              <div className="h-10 sm:h-12">
+                <img src={comboIcon} alt="" className="h-full object-contain" />
+              </div>
+            )}
           </>
         )}
       </div>
 
-      <motion.div animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className="shrink-0">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#B38F2B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <motion.div
+        animate={{ x: [0, 5, 0] }}
+        transition={{ repeat: Infinity, duration: 1.5 }}
+        className="shrink-0"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12H19M19 12L13 6M19 12L13 18"
+            stroke="#B38F2B"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </motion.div>
 
@@ -179,8 +265,10 @@ function GiftBlock({ icons, label, comboIcon, prizeIcon, text, noIconText }: { i
         <div className="h-10 sm:h-14 shrink-0 ml-2">
           <img src={prizeIcon} alt="" className="h-full object-contain" />
         </div>
-        <p className="text-[#6B441F] text-[12px] sm:text-[15px] font-black">{text}</p>
+        <p className="text-[#6B441F] text-[12px] sm:text-[15px] font-black">
+          {text}
+        </p>
       </div>
     </div>
-  )
+  );
 }

@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import logo from "../assets/logo.png";
 
 interface GameCard {
   id: string;
@@ -68,29 +70,61 @@ export default function Hub() {
         }}
       />
 
+      {/* Top Navigation */}
+      <nav className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-6 md:px-12">
+        <div></div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/60 backdrop-blur-sm md:px-5 md:py-2 md:text-sm">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+          DevDay 2026
+        </div>
+      </nav>
+
       {/* Content */}
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
-        {/* Header */}
-        <div className="mb-16 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-medium text-white/60 backdrop-blur-sm">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            DevDay 2026
-          </div>
-          <h1 className="bg-gradient-to-b from-white via-white to-white/50 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl lg:text-7xl">
-            Game Hub
-          </h1>
-          <p className="mt-4 max-w-md text-base text-white/45">
-            Chọn một trò chơi để bắt đầu trải nghiệm DevDay 2026
-          </p>
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 pb-16 pt-32 md:pt-40">
+        {/* Hero Area */}
+        <div className="mb-24 text-center flex flex-col items-center">
+          <img
+            src={logo}
+            alt="Kozocom Logo"
+            className="h-20 w-auto object-contain md:h-12"
+          />
         </div>
 
         {/* Game cards */}
-        <div className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: {
+                staggerChildren: 0.15,
+              },
+            },
+          }}
+        >
           {games.map((game) => (
-            <button
+            <motion.button
               key={game.id}
               onClick={() => navigate(game.path)}
-              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-left backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-white/20 hover:bg-white/[0.07] hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              variants={{
+                hidden: { opacity: 0, y: 40, scale: 0.9 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: { type: "spring", stiffness: 300, damping: 24 },
+                },
+              }}
+              whileHover={{
+                scale: 1.04,
+                y: -8,
+                boxShadow: `0 20px 40px -10px ${game.accent}50`,
+                transition: { duration: 0.2, ease: "easeOut" },
+              }}
+              whileTap={{ scale: 0.96 }}
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-left backdrop-blur-sm transition-colors duration-300 hover:border-white/30 hover:bg-white/[0.08] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer"
             >
               {/* Gradient top bar */}
               <div
@@ -131,13 +165,13 @@ export default function Hub() {
                   />
                 </svg>
               </div>
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <p className="mt-16 text-center text-xs text-white/20">
-          © 2026 DevDay — Kozo.com
+          © 2026 DevDay — Kozocom
         </p>
       </div>
     </div>

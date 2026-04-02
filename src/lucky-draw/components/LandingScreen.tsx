@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Assets
 import backgroundImg from "../assets/background.jpg";
 import logoGame from "../assets/logo-game.png";
-import logoKozocom from "../assets/logo.png";
+import logoKozocom from "../../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
 import nextSvg from "../assets/next.svg";
 import preDisableSvg from "../assets/preDisable.svg";
@@ -63,7 +63,7 @@ const SCREENS = [
   },
 ];
 
-const PAGE_STORAGE_KEY = 'lottery_landingPage';
+const PAGE_STORAGE_KEY = "lottery_landingPage";
 
 export default function LandingScreen({ onNext }) {
   const [page, setPage] = useState(() => {
@@ -206,7 +206,10 @@ export default function LandingScreen({ onNext }) {
                 </InfoCard>
               </>
             ) : (
-              <div className="flex flex-col items-center" style={{ maxWidth: "600px" }}>
+              <div
+                className="flex flex-col items-center"
+                style={{ maxWidth: "600px" }}
+              >
                 <InfoCard title={screen.center.title} centerTitle>
                   <p className="text-white text-[20px] leading-relaxed text-center">
                     {screen.center.text}

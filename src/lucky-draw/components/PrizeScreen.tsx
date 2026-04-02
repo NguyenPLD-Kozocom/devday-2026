@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import logoGame from "../assets/logo-game.png";
 // Assets
 import backgroundImg from "../assets/background.jpg";
-import logoKozocom from "../assets/logo.png";
+import logoKozocom from "../../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
 import { PRIZES } from "../prizes";
 

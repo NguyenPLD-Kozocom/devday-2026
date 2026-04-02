@@ -3,7 +3,7 @@ import { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import backgroundImg from "../assets/background.jpg";
 import logoGame from "../assets/logo-game.png";
-import logoKozocom from "../assets/logo.png";
+import logoKozocom from "../../assets/logo.png";
 import speakerIcon from "../assets/speaker.png";
 import { getPrizeById } from "../prizes";
 import preActiveSvg from "../assets/image.png";
