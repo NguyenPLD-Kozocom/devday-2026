@@ -153,7 +153,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               </div>
 
               {/* Navigation Arrows */}
-              <div className="flex justify-center gap-6">
+              <div className="flex justify-center gap-6 mt-[30px]">
                 <button
                   onClick={handlePrev}
                   className={cn(
@@ -209,7 +209,7 @@ function RuleBlock({
     <div
       className={`bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] p-2 md:p-5 flex items-center gap-10 drop-shadow-sm ${className}`}
     >
-      <div className="w-auto sm:w-[150px] h-12 sm:h-[130px] shrink-0 flex items-center justify-center gap-2">
+      <div className="w-auto sm:w-auto h-12 sm:h-[130px] shrink-0 flex items-center justify-center gap-2">
         {iconList.map((src, i) => (
           <img key={i} src={src} alt="" className="h-full object-contain" />
         ))}
