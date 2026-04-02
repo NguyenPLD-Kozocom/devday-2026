@@ -1,3 +1,14 @@
+.btn-label {
+  font-family: "iCielBCCubano", sans-serif;
+  font-weight: 400;
+  font-size: 44.32px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-align: center;
+  color: #ffffff;
+  -webkit-text-stroke: 0.89px #ee7200;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

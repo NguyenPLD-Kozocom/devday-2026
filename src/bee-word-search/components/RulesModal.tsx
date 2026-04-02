@@ -11,6 +11,9 @@ import cellCombo3 from "../assets/honey_cell_kozocom_combo3.png";
 import giftBig from "../assets/gift_big.png";
 import giftMedium from "../assets/gift_medium.png";
 import giftSmall from "../assets/gift_small.png";
+import cellKo from "../assets/honey_cell_ko.png";
+import cellZo from "../assets/honey_cell_zo.png";
+import cellCom from "../assets/honey_cell_com.png";
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -28,7 +31,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center px-[100px] py-[46.5px]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -41,12 +44,12 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-[800px] h-[60vh] aspect-800/500 bg-[#FFF3C5] rounded-[2.5rem] border-[6px] border-[#F0BC3E] shadow-2xl overflow-hidden flex flex-col p-6 sm:p-10 select-none"
+            className="relative w-full max-w-full max-h-full aspect-800/500 bg-[#FFE6A9] rounded-[2.5rem] border-[6px] border-[#F0BC3E] shadow-2xl flex flex-col md:p-16 md:pb-[60px] select-none"
           >
-            {/* Close Button */}
+            {/* Close Button — outside overflow-hidden so it's never clipped */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-10 h-10 active:scale-90 transition-transform z-20"
+              className="cursor-pointer absolute -top-[35px] -right-[35px] w-[66px] h-[68px] active:scale-90 transition-transform z-20"
             >
               <img
                 src={buttonX}
@@ -55,121 +58,131 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               />
             </button>
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-hidden relative">
-              <AnimatePresence mode="wait">
-                {currentPage === 0 ? (
-                  <motion.div
-                    key="page-rules"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="h-full flex flex-col"
-                  >
-                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
-                      Cách thức tham gia:
-                    </h2>
-                    <ul className="text-[#6B441F] text-sm sm:text-base space-y-1 mb-6 list-disc pl-5 font-semibold">
-                      <li>
-                        Mỗi người chơi có tối đa 04 lần lựa chọn ô chữ trong một
-                        lượt chơi.
-                      </li>
-                      <li>
-                        Người chơi lần lượt chọn từng ô để khám phá nội dung bên
-                        trong.
-                      </li>
-                    </ul>
+            {/* Inner wrapper clips only content, not the Close Button */}
+            <div className="overflow-hidden flex-1 h-full flex flex-col justify-between">
+              {/* Content Area */}
+              <div className="flex-1 overflow-hidden relative">
+                <AnimatePresence mode="wait">
+                  {currentPage === 0 ? (
+                    <motion.div
+                      key="page-rules"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="h-full flex flex-col"
+                    >
+                      <h2 className="text-[#623C00] text-[38px] font-black font-main">
+                        Cách thức tham gia:
+                      </h2>
+                      <ul className="list-none text-[#623C00] text-[38px] space-y-1 mb-6 pl-5 font-medium font-main ">
+                        <li className="mb-0">
+                          <span className="mr-4">•</span>
+                          <span className="leading-none">
+                            Mỗi người chơi có tối đa 04 lần lựa chọn ô chữ trong
+                            một lượt chơi.
+                          </span>
+                        </li>
+                        <li className="mb-0">
+                          <span className="mr-4">•</span>
+                          <span className="leading-none">
+                            Người chơi lần lượt chọn từng ô để khám phá nội dung
+                            bên trong.
+                          </span>
+                        </li>
+                      </ul>
 
-                    <div className="grid grid-cols-2 gap-4 flex-1">
-                      <RuleBlock
-                        icon={cellKozocom}
-                        text="Nhận ngay Phần quà đặc biệt của chương trình."
-                      />
-                      <RuleBlock
-                        icon={cellBoom}
-                        text="Lượt chơi kết thúc ngay lập tức, người chơi mất quyền lựa chọn các ô còn lại."
-                      />
-                      <RuleBlock
-                        icon={cellGift}
-                        text="MC sẽ xác nhận bạn muốn 'Dừng lại nhận quà' hay 'Tiếp tục chơi' để tìm kiếm giải thưởng lớn hơn. Nếu tiếp tục và không may trúng Boom, quà trước đó sẽ bị hủy."
-                        className="col-span-2"
-                      />
-                      <RuleBlock
-                        icon={cellCombo3}
-                        text="Nếu chọn đủ và ghép được 3 chữ lẻ 'Ko' + 'Zo' + 'Com' (trong 4 lần chọn): Nhận ngay Phần quà đặc biệt."
-                        className="col-span-2"
-                      />
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="page-gifts"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="h-full flex flex-col"
-                  >
-                    <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
-                      Danh sách quà:
-                    </h2>
-                    <p className="text-[#6B441F] text-sm sm:text-base mb-6 font-semibold list-disc pl-5">
-                      • Mỗi trường hợp sẽ có các phần quà khác nhau, cùng khám
-                      phá
-                    </p>
+                      <div className="grid grid-cols-2 gap-7.5 flex-1">
+                        <RuleBlock
+                          icon={cellKozocom}
+                          text="Nhận ngay Phần quà đặc biệt của chương trình."
+                        />
+                        <RuleBlock
+                          icon={cellBoom}
+                          text="Lượt chơi kết thúc ngay lập tức, người chơi mất quyền lựa chọn các ô còn lại."
+                        />
+                        <RuleBlock
+                          icon={cellGift}
+                          text="MC sẽ xác nhận bạn muốn 'Dừng lại nhận quà' hay 'Tiếp tục chơi' để tìm kiếm giải thưởng lớn hơn. Nếu tiếp tục và không may trúng Boom, quà trước đó sẽ bị hủy."
+                          className="col-span-2"
+                        />
+                        <RuleBlock
+                          icons={[cellKo, cellZo, cellCom]}
+                          text="Nếu chọn đủ và ghép được 3 chữ lẻ 'Ko' + 'Zo' + 'Com' (trong 4 lần chọn): Nhận ngay Phần quà đặc biệt."
+                          className="col-span-2"
+                        />
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="page-gifts"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="h-full flex flex-col"
+                    >
+                      <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
+                        Danh sách quà:
+                      </h2>
+                      <p className="text-[#6B441F] text-sm sm:text-base mb-6 font-semibold list-disc pl-5">
+                        • Mỗi trường hợp sẽ có các phần quà khác nhau, cùng khám
+                        phá
+                      </p>
 
-                    <div className="flex flex-col gap-3 flex-1 h-full">
-                      <GiftBlock
-                        icons={[cellKozocom]}
-                        label="Hoặc"
-                        comboIcon={cellCombo3}
-                        prizeIcon={giftBig}
-                        text="Áo thun + Quạt + Ly giữ nhiệt"
-                      />
-                      <GiftBlock
-                        icons={[cellGift]}
-                        prizeIcon={giftMedium}
-                        text="Gấu / Quạt / Bút + Quạt / Bút x2"
-                      />
-                      <GiftBlock
-                        noIconText="Các trường hợp không đủ ghép thành chữ Kozocom"
-                        prizeIcon={giftSmall}
-                        text="Kẹo mút"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <div className="flex flex-col gap-3 flex-1 h-full">
+                        <GiftBlock
+                          icons={[cellKozocom]}
+                          label="Hoặc"
+                          comboIcon={cellCombo3}
+                          prizeIcon={giftBig}
+                          text="Áo thun + Quạt + Ly giữ nhiệt"
+                        />
+                        <GiftBlock
+                          icons={[cellGift]}
+                          prizeIcon={giftMedium}
+                          text="Gấu / Quạt / Bút + Quạt / Bút x2"
+                        />
+                        <GiftBlock
+                          noIconText="Các trường hợp không đủ ghép thành chữ Kozocom"
+                          prizeIcon={giftSmall}
+                          text="Kẹo mút"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation Arrows */}
+              <div className="flex justify-center gap-6">
+                <button
+                  onClick={handlePrev}
+                  className={cn(
+                    "active:scale-95 transition-transform",
+                    currentPage !== 0 ? "cursor-pointer" : "cursor-default",
+                  )}
+                >
+                  <img
+                    src={currentPage === 0 ? arrowInactive : arrowActive}
+                    alt="Next"
+                    className="w-12 sm:w-16 h-auto"
+                  />
+                </button>
+                <button
+                  onClick={handleNext}
+                  className={cn(
+                    "active:scale-95 transition-transform",
+                    currentPage !== 1 ? "cursor-pointer" : "cursor-default",
+                  )}
+                >
+                  <img
+                    src={currentPage === 1 ? arrowInactive : arrowActive}
+                    alt="Prev"
+                    className="w-12 sm:w-16 h-auto rotate-180"
+                  />
+                </button>
+              </div>
             </div>
-
-            {/* Navigation Arrows */}
-            <div className="flex justify-center gap-6 mt-4">
-              <button
-                onClick={handlePrev}
-                className={cn(
-                  "active:scale-95 transition-transform",
-                  currentPage !== 0 ? "cursor-pointer" : "cursor-default",
-                )}
-              >
-                <img
-                  src={currentPage === 0 ? arrowInactive : arrowActive}
-                  alt="Next"
-                  className="w-12 sm:w-16 h-auto"
-                />
-              </button>
-              <button
-                onClick={handleNext}
-                className={cn(
-                  "active:scale-95 transition-transform",
-                  currentPage !== 1 ? "cursor-pointer" : "cursor-default",
-                )}
-              >
-                <img
-                  src={currentPage === 1 ? arrowInactive : arrowActive}
-                  alt="Prev"
-                  className="w-12 sm:w-16 h-auto rotate-180"
-                />
-              </button>
-            </div>
+            {/* end inner overflow-hidden wrapper */}
           </motion.div>
         </div>
       )}
@@ -179,21 +192,29 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
 
 function RuleBlock({
   icon,
+  icons,
   text,
   className = "",
 }: {
-  icon: string;
+  /** Single icon (fallback when `icons` is not provided) */
+  icon?: string;
+  /** Multiple icons rendered side by side */
+  icons?: string[];
   text: string;
   className?: string;
 }) {
+  const iconList = icons ?? (icon ? [icon] : []);
+
   return (
     <div
-      className={`bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 sm:p-3 flex items-center gap-3 drop-shadow-sm ${className}`}
+      className={`bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] p-2 md:p-5 flex items-center gap-10 drop-shadow-sm ${className}`}
     >
-      <div className="w-14 sm:w-18 h-12 sm:h-16 shrink-0">
-        <img src={icon} alt="" className="w-full h-full object-contain" />
+      <div className="w-auto sm:w-[150px] h-12 sm:h-[130px] shrink-0 flex items-center justify-center gap-2">
+        {iconList.map((src, i) => (
+          <img key={i} src={src} alt="" className="h-full object-contain" />
+        ))}
       </div>
-      <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold leading-tight flex-1">
+      <p className="text-[#623C00] text-[32px] sm:text-[32px] font-medium font-main leading-tight flex-1">
         {text}
       </p>
     </div>

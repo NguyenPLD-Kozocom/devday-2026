@@ -25,10 +25,20 @@
   font-display: swap;
 }
 
+/* ── iCielBCCubano (bee-word-search app) ── */
+@font-face {
+  font-family: "iCielBCCubano";
+  src: url("/fonts/iCielBCCubano-Normal.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-technology: "Technology", ui-monospace, monospace;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-main: "SVN-Gilroy", sans-serif;
+  --font-cubano: "iCielBCCubano", sans-serif;
 
   /* bee-word-search tokens */
   --color-kozo-navy: #1b2a4a;

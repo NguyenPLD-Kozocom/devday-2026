@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import logoKozocom from "../assets/logo_kozocom.png";
 import gameBanner from "../assets/game_banner.png";
-import buttonDefault from "../assets/button_default.png";
+import buttonDefault from "../assets/button-default.svg";
 import buttonSoundOn from "../assets/button_sound_on.png";
 import buttonSoundOff from "../assets/button_sound_off.png";
 
@@ -32,7 +32,7 @@ export function StartScreen({
         <img
           src={logoKozocom}
           alt="Kozocom"
-          className="h-9 sm:h-11 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] contrast-125"
+          className="md:h-[62px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] contrast-125"
         />
       </motion.div>
 
@@ -50,7 +50,8 @@ export function StartScreen({
         <motion.img
           src={gameBanner}
           alt="Ong Tìm Chữ"
-          className="w-[85vw] max-w-[500px] object-contain drop-shadow-2xl"
+          className="object-contain drop-shadow-2xl"
+          style={{ width: "clamp(759px, 49.64vw, 953px)" }}
           animate={{
             y: [0, -10, 0],
           }}
@@ -63,20 +64,20 @@ export function StartScreen({
       </motion.div>
 
       {/* Buttons Container */}
-      <div className="relative z-10 flex flex-col items-center gap-4 mt-12 w-full max-w-[280px]">
+      <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-[350px]">
         {/* Play Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onStart}
-          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
+          className="font-cubano group relative w-[350px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
             src={buttonDefault}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <span className="relative z-10 text-white text-xl sm:text-2xl font-black tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+          <span className="btn-label relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
             CHƠI NGAY
           </span>
         </motion.button>
@@ -86,14 +87,14 @@ export function StartScreen({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onShowRules}
-          className="group relative w-full aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
+          className="font-cubano group relative w-[350px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
             src={buttonDefault}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <span className="relative z-10 text-white text-xl sm:text-2xl font-black tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+          <span className="btn-label relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
             LUẬT & QUÀ
           </span>
         </motion.button>
