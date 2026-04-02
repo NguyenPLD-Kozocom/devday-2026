@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { motion } from "framer-motion";
-
+import logoGame from "../assets/logo-game.png";
 // Assets
 import backgroundImg from "../assets/background.jpg";
 import logoKozocom from "../../assets/logo.png";
@@ -15,6 +15,24 @@ const handleEnterKey = (event, handler) => {
 };
 
 export default function PrizeScreen({ onBack, onSelectPrize }) {
+  const getPrizeCardSize = (isMain) => {
+    if (isMain) {
+      return {
+        width: "700px",
+        height: "900px",
+        imageWidth: "70%",
+        imageHeight: "70%",
+      };
+    }
+
+    return {
+      width: "600px",
+      height: "650px",
+      imageWidth: "62%",
+      imageHeight: "62%",
+    };
+  };
+
   return (
     <div
       className="relative w-full h-screen flex flex-col items-center overflow-hidden"
@@ -57,83 +75,66 @@ export default function PrizeScreen({ onBack, onSelectPrize }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <div className="text-white text-center font-extrabold tracking-[0.18em] uppercase text-[24px] md:text-[32px] drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]">
-          Chọn giải thưởng
-        </div>
+        <img
+          src={logoGame}
+          alt="Lottery Game"
+          className="w-[480px] md:w-[620px] lg:w-[720px] object-contain"
+        />
       </motion.div>
 
       {/* ── Prizes Section ── */}
       <div className="flex-1 flex items-center justify-center w-full z-10 px-8 md:px-16">
-        <div className="flex items-end justify-center gap-6 md:gap-10 lg:gap-14">
-          {PRIZES.map((prize, i) => (
-            <motion.div
-              key={prize.id}
-              className="flex flex-col items-center"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-            >
-              {/* Prize Label Badge */}
+        <div className="flex items-end justify-center">
+          {PRIZES.map((prize, i) => {
+            const prizeCardSize = getPrizeCardSize(prize.isMain);
+
+            return (
               <motion.div
-                layoutId={`prize-badge-${prize.id}`}
-                className="rounded-full px-5 py-1.5 text-white font-bold text-sm md:text-base z-20 relative"
-                style={{
-                  background: prize.labelBg,
-                  marginBottom: "-18px",
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                }}
+                key={prize.id}
+                className={`relative flex flex-col items-center -top-[100px]`}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
               >
-                {prize.label}
-              </motion.div>
-
-              {/* Frame + Product Image */}
-              <motion.button
-                type="button"
-                layoutId={`prize-card-${prize.id}`}
-                className="relative flex items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-[28px] cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-transform"
-                style={{
-                  width: prize.isMain ? "320px" : "240px",
-                  height: prize.isMain ? "320px" : "240px",
-                }}
-                aria-label={`Xem chi tiết ${prize.label}`}
-                onClick={() => onSelectPrize?.(prize.id)}
-                onKeyDown={(e) =>
-                  handleEnterKey(e, () => onSelectPrize?.(prize.id))
-                }
-              >
-                {/* Frame SVG */}
-                <motion.img
-                  layoutId={`prize-frame-${prize.id}`}
-                  src={prize.frame}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
-                {/* Product Image — centered inside frame */}
-                <motion.img
-                  layoutId={`prize-image-${prize.id}`}
-                  src={prize.image}
-                  alt={prize.name}
-                  className="relative z-10 object-contain"
+                {/* Frame + Product Image */}
+                <motion.button
+                  type="button"
+                  layoutId={`prize-card-${prize.id}`}
+                  className="relative flex items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-[28px] cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-transform"
                   style={{
-                    width: prize.isMain ? "65%" : "60%",
-                    height: prize.isMain ? "65%" : "60%",
+                    width: prizeCardSize.width,
+                    height: prizeCardSize.height,
                   }}
-                />
-              </motion.button>
-
-              {/* Product Name */}
-              <motion.p
-                layoutId={`prize-name-${prize.id}`}
-                className="text-white font-bold text-center mt-2 tracking-wider uppercase"
-                style={{
-                  fontSize: prize.isMain ? "18px" : "14px",
-                }}
-              >
-                {prize.name}
-              </motion.p>
-            </motion.div>
-          ))}
+                  aria-label={`Xem chi tiết ${prize.label}`}
+                  onClick={() => onSelectPrize?.(prize.id)}
+                  onKeyDown={(e) =>
+                    handleEnterKey(e, () => onSelectPrize?.(prize.id))
+                  }
+                >
+                  {/* Frame SVG */}
+                  <motion.img
+                    layoutId={`prize-frame-${prize.id}`}
+                    src={prize.frame}
+                    alt=""
+                    className={`absolute inset-0 w-full h-full object-contain ${
+                      prize.isMain ? "-top-[80px]" : "-top-[40px]"
+                    }`}
+                  />
+                  {/* Product Image — centered inside frame */}
+                  <motion.img
+                    layoutId={`prize-image-${prize.id}`}
+                    src={prize.image}
+                    alt={prize.name}
+                    className="relative z-10 object-contain"
+                    style={{
+                      width: prizeCardSize.imageWidth,
+                      height: prizeCardSize.imageHeight,
+                    }}
+                  />
+                </motion.button>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
