@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { Home } from "./pages/Home";
 import { Game } from "./pages/Game";
 import { audio } from "./utils/audio";
+import "./App.css";
 
 function App() {
   const [isMuted, setIsMuted] = useState(false);
