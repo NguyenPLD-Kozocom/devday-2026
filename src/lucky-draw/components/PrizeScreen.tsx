@@ -1,11 +1,13 @@
 import type { KeyboardEvent } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import logoGame from "../assets/logo-game.png";
 // Assets
 import backgroundImg from "../assets/background.jpg";
 import logoKozocom from "../../assets/logo.png";
 import { PRIZES } from "../prizes";
 import SoundToggleButton from "./SoundToggleButton";
+import preActiveSvg from "../assets/image.png";
 
 type PrizeScreenProps = {
   onBack?: () => void;
@@ -19,7 +21,93 @@ const handleEnterKey = (event: KeyboardEvent, handler: () => void) => {
   }
 };
 
-export default function PrizeScreen({ onSelectPrize }: PrizeScreenProps) {
+type FloatingPrizeImageProps = {
+  prizeId: string;
+  prizeName: string;
+  imageSrc: string;
+  layoutId: string;
+  width: string;
+  height: string;
+};
+
+const FloatingPrizeImage = ({
+  prizeId,
+  prizeName,
+  imageSrc,
+  layoutId,
+  width,
+  height,
+}: FloatingPrizeImageProps) => {
+  const controls = useAnimation();
+  const prefersReducedMotion = useReducedMotion();
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let cancelled = false;
+
+    const randomBetween = (min: number, max: number) =>
+      min + Math.random() * (max - min);
+
+    const step = async () => {
+      if (cancelled) return;
+
+      // Floating: stronger movement but still eased for smoothness.
+      const verticalDir = Math.random() < 0.8 ? -1 : 1; // mostly upwards, sometimes down
+      const nextY = verticalDir * randomBetween(12, 28);
+      const nextX = randomBetween(-10, 10);
+      const nextRotate = randomBetween(-7, 7);
+      const nextScale = randomBetween(1.0, 1.05);
+
+      const duration = randomBetween(1.2, 2.2);
+      const pause = randomBetween(120, 420);
+
+      await controls.start({
+        y: nextY,
+        x: nextX,
+        rotate: nextRotate,
+        scale: nextScale,
+        transition: { duration, ease: "easeInOut" },
+      });
+
+      if (cancelled) return;
+
+      timeoutRef.current = window.setTimeout(step, pause);
+    };
+
+    step();
+
+    return () => {
+      cancelled = true;
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    };
+  }, [controls, prefersReducedMotion, prizeId]);
+
+  return (
+    <motion.img
+      layoutId={layoutId}
+      src={imageSrc}
+      alt={prizeName}
+      className="relative z-10 object-contain"
+      style={{
+        willChange: "transform",
+        transformOrigin: "center",
+        width,
+        height,
+      }}
+      initial={{ y: 0, x: 0, rotate: 0, scale: 1 }}
+      animate={controls}
+    />
+  );
+};
+
+export default function PrizeScreen({
+  onBack,
+  onSelectPrize,
+}: PrizeScreenProps) {
+  const MotionButton = motion.button;
+
   const getPrizeCardSize = (isMain: boolean) => {
     if (isMain) {
       return {
@@ -48,6 +136,26 @@ export default function PrizeScreen({ onSelectPrize }: PrizeScreenProps) {
         backgroundRepeat: "no-repeat",
       }}
     >
+      {/* ── Back to rules (LandingScreen) ── */}
+      {onBack && (
+        <MotionButton
+          type="button"
+          className="absolute top-4 left-4 z-20 w-10 h-10 md:w-12 md:h-12 cursor-pointer hover:scale-110 active:scale-95 transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-full"
+          onClick={onBack}
+          onKeyDown={(e) => handleEnterKey(e, onBack)}
+          aria-label="Back to rules"
+          initial={{ opacity: 0, x: -18 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          <img
+            src={preActiveSvg}
+            alt="Back"
+            className="w-full h-full object-contain"
+          />
+        </MotionButton>
+      )}
+
       {/* ── Header: Logo + Speaker ── */}
       <motion.div
         className="absolute top-4 right-4 md:top-6 md:right-8 flex items-center gap-3 z-10"
@@ -117,15 +225,13 @@ export default function PrizeScreen({ onSelectPrize }: PrizeScreenProps) {
                     }`}
                   />
                   {/* Product Image — centered inside frame */}
-                  <motion.img
+                  <FloatingPrizeImage
+                    prizeId={prize.id}
+                    prizeName={prize.name}
+                    imageSrc={prize.image}
                     layoutId={`prize-image-${prize.id}`}
-                    src={prize.image}
-                    alt={prize.name}
-                    className="relative z-10 object-contain"
-                    style={{
-                      width: prizeCardSize.imageWidth,
-                      height: prizeCardSize.imageHeight,
-                    }}
+                    width={prizeCardSize.imageWidth}
+                    height={prizeCardSize.imageHeight}
                   />
                 </motion.button>
               </motion.div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import LandingScreen from "./components/LandingScreen";
 import PrizeScreen from "./components/PrizeScreen";
@@ -7,6 +7,7 @@ import { SoundSettingsProvider } from "./SoundSettingsContext";
 
 const STORAGE_KEY = "lottery_currentScreen";
 const PRIZE_STORAGE_KEY = "lottery_selectedPrize";
+const LEFT_GAME_ENTRY_FLAG = "lottery_leftGameEntryFlag";
 
 /**
  * App — Root component managing screen navigation.
@@ -27,6 +28,23 @@ function App() {
     const saved = localStorage.getItem(PRIZE_STORAGE_KEY);
     return saved ?? "gold";
   });
+
+  // When leaving `/lucky-draw` (e.g. going back to Hub/home), reset to the main game screen
+  // next time we enter `/lucky-draw`, instead of resuming directly in "detail".
+  useEffect(() => {
+    const resetOnNextEntry = sessionStorage.getItem(LEFT_GAME_ENTRY_FLAG) === "1";
+    if (resetOnNextEntry) {
+      sessionStorage.removeItem(LEFT_GAME_ENTRY_FLAG);
+      localStorage.setItem(STORAGE_KEY, "1");
+      setCurrentScreen(1);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(LEFT_GAME_ENTRY_FLAG, "1");
+    };
+  }, []);
 
   const goToScreen = (screen: number) => {
     localStorage.setItem(STORAGE_KEY, String(screen));

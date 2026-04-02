@@ -9,7 +9,7 @@ import logoKozocom from "../../assets/logo.png";
 import nextSvg from "../assets/next.svg";
 import preDisableSvg from "../assets/preDisable.svg";
 import preActiveSvg from "../assets/image.png";
-import playNowSvg from "../assets/playnow.svg";
+import playNow from "../assets/playnow.png";
 import SoundToggleButton from "./SoundToggleButton";
 
 // ── Screen data ──
@@ -225,7 +225,7 @@ export default function LandingScreen({ onNext }) {
             aria-label="Play Now"
           >
             <img
-              src={playNowSvg}
+              src={playNow}
               alt="Play Now"
               style={{ height: "70px" }}
               className="object-contain"
@@ -290,7 +290,7 @@ function InfoCard({ title, children, centerTitle = false }) {
         }}
       >
         <h3
-          className={`mb-4 tracking-wide ${centerTitle ? "text-center" : ""}`}
+          className={`mb-4 tracking-wide text-white ${centerTitle ? "text-center" : ""}`}
           style={{ fontSize: "34px", fontWeight: 700 }}
         >
           {title}
