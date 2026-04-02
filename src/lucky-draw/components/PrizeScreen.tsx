@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { KeyboardEvent } from "react";
 import { motion } from "framer-motion";
 import logoGame from "../assets/logo-game.png";
 // Assets
@@ -7,15 +7,20 @@ import logoKozocom from "../../assets/logo.png";
 import { PRIZES } from "../prizes";
 import SoundToggleButton from "./SoundToggleButton";
 
-const handleEnterKey = (event, handler) => {
+type PrizeScreenProps = {
+  onBack?: () => void;
+  onSelectPrize?: (prizeId: string) => void;
+};
+
+const handleEnterKey = (event: KeyboardEvent, handler: () => void) => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     handler();
   }
 };
 
-export default function PrizeScreen({ onBack, onSelectPrize }) {
-  const getPrizeCardSize = (isMain) => {
+export default function PrizeScreen({ onSelectPrize }: PrizeScreenProps) {
+  const getPrizeCardSize = (isMain: boolean) => {
     if (isMain) {
       return {
         width: "700px",
@@ -77,7 +82,7 @@ export default function PrizeScreen({ onBack, onSelectPrize }) {
       <div className="flex-1 flex items-center justify-center w-full z-10 px-8 md:px-16">
         <div className="flex items-end justify-center">
           {PRIZES.map((prize, i) => {
-            const prizeCardSize = getPrizeCardSize(prize.isMain);
+            const prizeCardSize = getPrizeCardSize(Boolean(prize.isMain));
 
             return (
               <motion.div

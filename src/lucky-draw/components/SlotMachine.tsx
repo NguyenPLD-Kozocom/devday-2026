@@ -19,12 +19,21 @@ const FLY_DIGIT_DURATION_SEC = FLY_RISE_DURATION_SEC + FLY_TO_SLOT_DURATION_SEC;
 const FLY_T_RISE = FLY_RISE_DURATION_SEC / FLY_DIGIT_DURATION_SEC;
 
 /** Khớp số ô spin (VerticalReel — span giữa khi locked) */
-const REEL_DIGIT_FONT_SIZE = (compact) =>
+const REEL_DIGIT_FONT_SIZE = (compact: boolean) =>
   compact ? "clamp(124px, 24vw, 176px)" : "clamp(152px, 22vw, 216px)";
 const REEL_DIGIT_TEXT_SHADOW = "0 1px 0 rgba(0,0,0,0.28)";
 
+type FlyPosPayload = {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  digit: number;
+  roundIndex: number;
+};
+
+type LandedPulse = { x: number; y: number; digit: number };
+
 /** Số đang hiển thị tại ô giữa reel (ưu tiên DOM = đúng pixel đang thấy) */
-const parseDigitFromReelEl = (el) => {
+const parseDigitFromReelEl = (el: Element | null | undefined) => {
   const raw = el?.textContent ?? "";
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 0) return null;
@@ -63,25 +72,33 @@ export default function SlotMachine({
   const [idleDigit, setIdleDigit] = useState(0);
   const [board, setBoard] = useState<(number | null)[]>([null, null, null]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [flyPos, setFlyPos] = useState(null);
-  const [landedPulse, setLandedPulse] = useState(null);
-  const [reelSpinFromDigit, setReelSpinFromDigit] = useState(null);
+  const [flyPos, setFlyPos] = useState<FlyPosPayload | null>(null);
+  const [landedPulse, setLandedPulse] = useState<LandedPulse | null>(null);
+  const [reelSpinFromDigit, setReelSpinFromDigit] = useState<number | null>(
+    null,
+  );
   const [reelIdleShowsDigit, setReelIdleShowsDigit] = useState(true);
-  const reelWrapRef = useRef(null);
-  const internalBoardRefs = useRef([null, null, null]);
+  const reelWrapRef = useRef<HTMLDivElement | null>(null);
+  const internalBoardRefs = useRef<(HTMLDivElement | null)[]>([
+    null,
+    null,
+    null,
+  ]);
   const boardRefs = externalBoardSlotRefs ?? internalBoardRefs;
   const showInlineBoard = !externalBoardSlotRefs;
   const spinDoneRef = useRef(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const resultsRef = useRef(results);
-  const flyPayloadRef = useRef(null);
-  const spinAudioRef = useRef(null);
-  const tadaAudioRef = useRef(null);
-  const tadaPlayedForFlyKeyRef = useRef(null);
+  const flyPayloadRef = useRef<FlyPosPayload | null>(null);
+  const spinAudioRef = useRef<HTMLAudioElement | null>(null);
+  const tadaAudioRef = useRef<HTMLAudioElement | null>(null);
+  const tadaPlayedForFlyKeyRef = useRef<string | null>(null);
   const { soundEnabled } = useSoundSettings();
   useSfxOverlayWhile(phase === "spinning" && soundEnabled);
 
-  resultsRef.current = results;
+  useLayoutEffect(() => {
+    resultsRef.current = results;
+  }, [results]);
 
   useEffect(() => {
     return () => {
@@ -104,14 +121,15 @@ export default function SlotMachine({
     if (tadaPlayedForFlyKeyRef.current === flyKey) return;
     tadaPlayedForFlyKeyRef.current = flyKey;
 
-    let audio = tadaAudioRef.current;
-    if (!audio) {
-      audio = new Audio(tadaSfxUrl);
-      audio.loop = false;
-      tadaAudioRef.current = audio;
+    if (!tadaAudioRef.current) {
+      const created = new Audio(tadaSfxUrl);
+      created.loop = false;
+      tadaAudioRef.current = created;
     }
-    audio.currentTime = 0;
-    void audio.play().catch(() => {});
+    const tada = tadaAudioRef.current;
+    if (!tada) return;
+    tada.currentTime = 0;
+    void tada.play().catch(() => {});
   }, [flyPos, soundEnabled, spinKey]);
 
   useEffect(() => {
@@ -151,10 +169,12 @@ export default function SlotMachine({
   }, [phase, spinKey]);
 
   useEffect(() => {
-    if (phase === "idle") setReelSpinFromDigit(null);
+    if (phase !== "idle") return;
+    queueMicrotask(() => setReelSpinFromDigit(null));
   }, [phase]);
 
-  const completeRoundAfterDigit = useCallback((ri, digitOverride) => {
+  const completeRoundAfterDigit = useCallback(
+    (ri: number, digitOverride?: number | null) => {
     const val =
       digitOverride !== undefined && digitOverride !== null
         ? digitOverride
@@ -179,7 +199,9 @@ export default function SlotMachine({
       setPhase("celebration");
       setShowConfetti(true);
     }
-  }, []);
+  },
+    [],
+  );
 
   useLayoutEffect(() => {
     if (phase !== "flying") {
@@ -287,15 +309,16 @@ export default function SlotMachine({
     setSpinKey((k) => k + 1);
     setPhase("spinning");
 
-    let audio = spinAudioRef.current;
-    if (!audio) {
-      audio = new Audio(spinSfxUrl);
-      audio.loop = true;
-      spinAudioRef.current = audio;
+    if (!spinAudioRef.current) {
+      const created = new Audio(spinSfxUrl);
+      created.loop = true;
+      spinAudioRef.current = created;
     }
-    audio.currentTime = 0;
+    const spin = spinAudioRef.current;
+    if (!spin) return;
+    spin.currentTime = 0;
     if (soundEnabled) {
-      void audio.play().catch(() => {});
+      void spin.play().catch(() => {});
     }
   }, [phase, board, idleDigit, soundEnabled]);
 

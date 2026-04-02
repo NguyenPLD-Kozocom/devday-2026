@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import borderSpin from "../assets/border-spin.svg";
@@ -40,7 +39,7 @@ const createSpinEase = () => {
   }
   const total = cumulative[STEPS];
   for (let i = 0; i <= STEPS; i++) cumulative[i] /= total;
-  return (rawT) => {
+  return (rawT: number) => {
     const t = Math.max(0, Math.min(1, rawT));
     const pos = t * STEPS;
     const i = Math.min(Math.floor(pos), STEPS - 1);
@@ -51,6 +50,25 @@ const createSpinEase = () => {
 
 const SPIN_EASE = createSpinEase();
 
+export type VerticalReelMode = "idle" | "spinning" | "locked";
+
+export type VerticalReelProps = {
+  targetValue: number;
+  spinKey: number;
+  mode: VerticalReelMode;
+  compact?: boolean;
+  idleValue?: number;
+  /** Số đang hiển thị lúc kéo (từ parent, chụp trước setIdleDigit). Ưu tiên hơn idleValue khi quay. */
+  spinFromDigit?: number | null;
+  /** Ẩn số giữa khe khi overlay bay (chỉ còn một số bay, không trùng hai số) */
+  hideCenterDigit?: boolean;
+  /** Khi idle: ô giữa trống (sau khi số đã bay đi); false = hiện đủ số (init / game mới) */
+  idleCenterEmpty?: boolean;
+  onPull?: () => void;
+  pullDisabled?: boolean;
+  onSpinComplete?: () => void;
+};
+
 /**
  * Khung quay: chỉ dùng border-spin.svg làm nền (viền có sẵn trong asset), số nằm trong ô cửa sổ.
  */
@@ -60,16 +78,13 @@ export default function VerticalReel({
   mode,
   compact = false,
   idleValue = 0,
-  /** Số đang hiển thị lúc kéo (từ parent, chụp trước setIdleDigit). Ưu tiên hơn idleValue khi quay. */
   spinFromDigit = null,
-  /** Ẩn số giữa khe khi overlay bay (chỉ còn một số bay, không trùng hai số) */
   hideCenterDigit = false,
-  /** Khi idle: ô giữa trống (sau khi số đã bay đi); false = hiện đủ số (init / game mới) */
   idleCenterEmpty = false,
   onPull,
   pullDisabled = false,
   onSpinComplete,
-}) {
+}: VerticalReelProps) {
   const strip = Array.from(
     { length: SPIN_CYCLES * ROWS_PER_ROTATION },
     (_, i) => i % 10,
@@ -94,11 +109,11 @@ export default function VerticalReel({
   const staticValue = mode === "idle" ? idleValue : targetValue;
   const staticTargetRowIndex = 10 + staticValue;
 
-  const slotRef = useRef(null);
+  const slotRef = useRef<HTMLDivElement | null>(null);
   const [slotH, setSlotH] = useState(48);
   const [rowH, setRowH] = useState(28.8);
   /** null = chưa nhận frame đầu từ motion (dùng initialY để tính quãng cuộn) */
-  const [spinYTrack, setSpinYTrack] = useState(null);
+  const [spinYTrack, setSpinYTrack] = useState<number | null>(null);
 
   useEffect(() => {
     if (mode === "spinning") {
