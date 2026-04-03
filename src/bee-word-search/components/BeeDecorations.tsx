@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import bee1 from '../assets/bee_1.png';
+import bee2 from '../assets/bee_2.png';
 
 const beeMotion: Variants = {
   hover: {
@@ -21,7 +23,7 @@ export function BeeDecorations() {
         className="absolute top-[46%] left-[3%] opacity-90"
       >
         <img
-          src="/src/bee-word-search/assets/bee_1.png"
+          src={bee1}
           alt="Bee"
           className="w-full h-auto"
         />
@@ -33,7 +35,7 @@ export function BeeDecorations() {
         style={{ animationDelay: "-1.5s" }}
       >
         <img
-          src="/src/bee-word-search/assets/bee_2.png"
+          src={bee2}
           alt="Bee"
           className="w-full h-auto"
         />

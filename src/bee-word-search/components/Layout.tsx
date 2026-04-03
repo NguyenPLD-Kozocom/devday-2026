@@ -1,4 +1,5 @@
 import { BeeDecorations } from './BeeDecorations';
+import bgImage from '../assets/on_game_background.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,8 +9,8 @@ interface LayoutProps {
 export function Layout({ children, shake }: LayoutProps) {
   return (
     <div 
-      className="relative min-h-[100svh] w-full flex flex-col bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{ backgroundImage: 'url("/src/bee-word-search/assets/on_game_background.png")' }}
+      className="relative min-h-svh w-full flex flex-col bg-cover bg-center bg-no-repeat overflow-hidden"
+      style={{ backgroundImage: `url(${bgImage})` }}
     >
       <BeeDecorations />
 

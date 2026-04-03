@@ -1,14 +1,21 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import type { TileData, CellData } from "../types/game";
+import honeyCellKo from "../assets/honey_cell_ko.png";
+import honeyCellZo from "../assets/honey_cell_zo.png";
+import honeyCellCom from "../assets/honey_cell_com.png";
+import honeyCellKozocom from "../assets/honey_cell_kozocom.png";
+import honeyCellGift from "../assets/honey_cell_gift.png";
+import honeyCellBoom from "../assets/honey_cell_boom.png";
+import backHoneyCell from "../assets/back_honey_cell.png";
 
 const CONTENT_IMAGES: Record<string, string> = {
-  Ko: "/src/bee-word-search/assets/honey_cell_ko.png",
-  Zo: "/src/bee-word-search/assets/honey_cell_zo.png",
-  Com: "/src/bee-word-search/assets/honey_cell_com.png",
-  Kozocom: "/src/bee-word-search/assets/honey_cell_kozocom.png",
-  gift: "/src/bee-word-search/assets/honey_cell_gift.png",
-  boom: "/src/bee-word-search/assets/honey_cell_boom.png",
+  Ko: honeyCellKo,
+  Zo: honeyCellZo,
+  Com: honeyCellCom,
+  Kozocom: honeyCellKozocom,
+  gift: honeyCellGift,
+  boom: honeyCellBoom,
 };
 
 export const HexagonTile = memo(function HexagonTile({
@@ -70,7 +77,7 @@ export const HexagonTile = memo(function HexagonTile({
         }}
       >
         <img
-          src="/src/bee-word-search/assets/back_honey_cell.png"
+          src={backHoneyCell}
           alt="Back"
           className="w-full h-full object-contain drop-shadow-sm"
         />
@@ -99,7 +106,7 @@ export const HexagonSlot = memo(function HexagonSlot({
           className="absolute inset-0 flex items-center justify-center transition-all duration-300 group-hover:drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]"
         >
           <img
-            src="/src/bee-word-search/assets/back_honey_cell.png"
+            src={backHoneyCell}
             alt="Slot"
             className="w-full h-full object-contain"
           />
@@ -109,7 +116,7 @@ export const HexagonSlot = memo(function HexagonSlot({
       {data.isRevealed && !isFlipping && (
         <div className="absolute inset-0 flex items-center justify-center opacity-20 brightness-50">
           <img
-            src="/src/bee-word-search/assets/back_honey_cell.png"
+            src={backHoneyCell}
             alt="Revealed Slot"
             className="w-full h-full object-contain grayscale"
           />
