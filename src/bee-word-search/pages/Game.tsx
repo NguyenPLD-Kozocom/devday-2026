@@ -12,6 +12,9 @@ import {
 import { RulesModal } from "../components/RulesModal";
 import { audio } from "../utils/audio";
 import type { CellData, TileData } from "../types/game";
+import buttonHelp from "../assets/button_help.png";
+import buttonSoundOff from "../assets/button_sound_off.png";
+import buttonSoundOn from "../assets/button_sound_on.png";
 
 const MAX_TURNS = 4;
 
@@ -271,7 +274,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           className="transition-transform active:scale-90 hover:brightness-110"
         >
           <img
-            src="/src/bee-word-search/assets/button_help.png"
+            src={buttonHelp}
             alt="Help"
             className="w-full h-full object-contain drop-shadow-lg"
           />
@@ -286,8 +289,8 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           <img
             src={
               isMuted
-                ? "/src/bee-word-search/assets/button_sound_off.png"
-                : "/src/bee-word-search/assets/button_sound_on.png"
+                ? buttonSoundOff
+                : buttonSoundOn
             }
             alt="Sound"
             className="w-full h-full object-contain drop-shadow-lg"
