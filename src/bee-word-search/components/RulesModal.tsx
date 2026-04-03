@@ -14,6 +14,7 @@ import giftSmall from "../assets/gift_small.png";
 import cellKo from "../assets/honey_cell_ko.png";
 import cellZo from "../assets/honey_cell_zo.png";
 import cellCom from "../assets/honey_cell_com.png";
+import arrow from "../assets/arrow.svg";
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -280,11 +281,7 @@ function GiftBlock({
         transition={{ repeat: Infinity, duration: 1.5 }}
         className="shrink-0"
       >
-        <img
-          src="src/bee-word-search/assets/arrow.svg"
-          alt=""
-          className="w-[45px] h-[30px]"
-        />
+        <img src={arrow} alt="" className="w-[45px] h-[30px]" />
       </motion.div>
 
       <div className="h-full bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] px-[30px] py-2 flex items-center gap-[30px]">
