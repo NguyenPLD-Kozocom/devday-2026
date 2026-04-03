@@ -316,11 +316,6 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       <GiftWinModal
         isOpen={gameStatus === "won" && winType === "gift"}
         onRestart={initGame}
-        giftTile={
-          activeGiftTile ||
-          collectedTiles.find((t) => t.type === "gift" && !t.isDisabled) ||
-          null
-        }
       />
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />

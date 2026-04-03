@@ -107,7 +107,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                         />
                         <RuleBlock
                           icons={[cellKo, cellZo, cellCom]}
-                          text="Nếu chọn đủ và ghép được 3 chữ lẻ 'Ko' + 'Zo' + 'Com' (trong 4 lần chọn): Nhận ngay Phần quà đặc biệt."
+                          text={`Nếu chọn đủ và ghép được 3 chữ lẻ "Ko" + "Zo" + "Com" (trong 4 lần chọn): Nhận ngay Phần quà đặc biệt.`}
                           className="col-span-2"
                         />
                       </div>
@@ -120,13 +120,18 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                       exit={{ x: -20, opacity: 0 }}
                       className="h-full flex flex-col"
                     >
-                      <h2 className="text-[#6B441F] text-xl sm:text-2xl font-black mb-3">
+                      <h2 className="text-[#623C00] text-[38px] font-black font-main">
                         Danh sách quà:
                       </h2>
-                      <p className="text-[#6B441F] text-sm sm:text-base mb-6 font-semibold list-disc pl-5">
-                        • Mỗi trường hợp sẽ có các phần quà khác nhau, cùng khám
-                        phá
-                      </p>
+                      <ul className="list-none text-[#623C00] text-[38px] space-y-1 mb-6 pl-5 font-medium font-main ">
+                        <li className="mb-0">
+                          <span className="mr-4">•</span>
+                          <span className="leading-none">
+                            Mỗi trường hợp sẽ có các phần quà khác nhau, cùng
+                            khám phá
+                          </span>
+                        </li>
+                      </ul>
 
                       <div className="flex flex-col gap-3 flex-1 h-full">
                         <GiftBlock
@@ -142,7 +147,10 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                           text="Gấu / Quạt / Bút + Quạt / Bút x2"
                         />
                         <GiftBlock
-                          noIconText="Các trường hợp không đủ ghép thành chữ Kozocom"
+                          noIconText={[
+                            "Các trường hợp không đủ ghép thành chữ",
+                            "Kozocom",
+                          ]}
                           prizeIcon={giftSmall}
                           text="Kẹo mút"
                         />
@@ -209,7 +217,7 @@ function RuleBlock({
     <div
       className={`bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] p-2 md:p-5 flex items-center gap-10 drop-shadow-sm ${className}`}
     >
-      <div className="w-auto sm:w-auto h-12 sm:h-[130px] shrink-0 flex items-center justify-center gap-2">
+      <div className="w-auto sm:w-auto h-12 sm:h-[130px] shrink-0 flex items-center justify-center gap-[15px]">
         {iconList.map((src, i) => (
           <img key={i} src={src} alt="" className="h-full object-contain" />
         ))}
@@ -234,25 +242,32 @@ function GiftBlock({
   comboIcon?: string;
   prizeIcon: string;
   text: string;
-  noIconText?: string;
+  noIconText?: string[];
 }) {
   return (
-    <div className="flex items-center gap-3 w-full h-[30%]">
-      <div className="flex-1 h-full bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 flex items-center justify-center gap-2">
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-5 w-full h-[30%]">
+      <div className="h-full bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] p-2 flex items-center justify-center gap-[30px]">
         {noIconText ? (
-          <p className="text-[#6B441F] text-[11px] sm:text-[13px] font-bold text-center leading-tight px-4">
-            {noIconText}
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-[#623C00] text-[32px] sm:text-[32px] font-medium text-center leading-tight px-5">
+              {noIconText[0]}
+            </p>
+            <p className="text-[#623C00] text-[32px] sm:text-[32px] font-bold text-center leading-tight px-5">
+              {noIconText[1]}
+            </p>
+          </div>
         ) : (
           <>
-            <div className="h-10 sm:h-12">
+            <div className="h-[130px]">
               <img src={icons?.[0]} alt="" className="h-full object-contain" />
             </div>
             {label && (
-              <span className="text-[#6B441F] font-bold text-xs">{label}</span>
+              <span className="text-[#623C00] font-medium text-[32px]">
+                {label}
+              </span>
             )}
             {comboIcon && (
-              <div className="h-10 sm:h-12">
+              <div className="h-[130px]">
                 <img src={comboIcon} alt="" className="h-full object-contain" />
               </div>
             )}
@@ -265,28 +280,18 @@ function GiftBlock({
         transition={{ repeat: Infinity, duration: 1.5 }}
         className="shrink-0"
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5 12H19M19 12L13 6M19 12L13 18"
-            stroke="#B38F2B"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <img
+          src="src/bee-word-search/assets/arrow.svg"
+          alt=""
+          className="w-[45px] h-[30px]"
+        />
       </motion.div>
 
-      <div className="flex-[1.5] h-full bg-[#FFFBEC] rounded-2xl border-2 border-[#FFE49A] p-2 flex items-center gap-4">
-        <div className="h-10 sm:h-14 shrink-0 ml-2">
+      <div className="h-full bg-[#F4D78F] rounded-2xl border-2 border-[#E2B137] px-[30px] py-2 flex items-center gap-[30px]">
+        <div className="w-[123.3px] h-[130px] shrink-0">
           <img src={prizeIcon} alt="" className="h-full object-contain" />
         </div>
-        <p className="text-[#6B441F] text-[12px] sm:text-[15px] font-black">
+        <p className="text-[#623C00] text-[32px] sm:text-[32px] font-bold font-main">
           {text}
         </p>
       </div>
