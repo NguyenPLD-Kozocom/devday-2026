@@ -7,17 +7,14 @@ interface LayoutProps {
 
 export function Layout({ children, shake }: LayoutProps) {
   return (
-    <div className="relative min-h-[100svh] w-full flex flex-col">
-      {/* Subtle modern corporate grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
-
-      {/* Spotlight glow behind the grid */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-kozo-blue)]/10 blur-[100px] rounded-full pointer-events-none" />
-
+    <div 
+      className="relative min-h-[100svh] w-full flex flex-col bg-cover bg-center bg-no-repeat overflow-hidden"
+      style={{ backgroundImage: 'url("/src/bee-word-search/assets/on_game_background.png")' }}
+    >
       <BeeDecorations />
 
       <main
-        className={`flex-1 w-full h-full relative z-20 flex flex-col overflow-hidden transition-transform duration-75 ${shake ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}
+        className={`flex-1 w-full h-full relative z-20 flex flex-col transition-transform duration-75 ${shake ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}
       >
         {children}
       </main>

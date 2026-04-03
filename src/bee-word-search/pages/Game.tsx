@@ -1,40 +1,46 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Layout } from '../components/Layout';
-import { Header } from '../components/Header';
-import { HexagonGrid } from '../components/HexagonGrid';
-import { CollectionTray } from '../components/CollectionTray';
-import { GiftModal, LoseModal, WinModal, GiftWinModal } from '../components/Modals';
-import { audio } from '../utils/audio';
-import type { CellData, TileData } from '../types/game';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Layout } from "../components/Layout";
+import { Header } from "../components/Header";
+import { HexagonGrid } from "../components/HexagonGrid";
+import { CollectionTray } from "../components/CollectionTray";
+import {
+  GiftModal,
+  LoseModal,
+  WinModal,
+  GiftWinModal,
+} from "../components/Modals";
+import { RulesModal } from "../components/RulesModal";
+import { audio } from "../utils/audio";
+import type { CellData, TileData } from "../types/game";
 
 const MAX_TURNS = 4;
 
 function generateInitialCells(): CellData[] {
   const contents = [
-    { type: 'letter', content: 'Kozocom' },
-    ...Array(8).fill({ type: 'letter', content: 'Ko' }),
-    ...Array(8).fill({ type: 'letter', content: 'Com' }),
-    ...Array(4).fill({ type: 'letter', content: 'Zo' }),
-    ...Array(4).fill({ type: 'gift', content: '🎁' }),
-    ...Array(4).fill({ type: 'boom', content: '💣' })
+    { type: "letter", content: "Kozocom" },
+    ...Array(8).fill({ type: "letter", content: "Ko" }),
+    ...Array(8).fill({ type: "letter", content: "Com" }),
+    ...Array(4).fill({ type: "letter", content: "Zo" }),
+    ...Array(4).fill({ type: "gift", content: "🎁" }),
+    ...Array(4).fill({ type: "boom", content: "💣" }),
   ];
 
   const shuffled = [...contents].sort(() => Math.random() - 0.5);
 
-  const ROWS = [5, 6, 7, 6, 5];
+  const COLS = [1, 4, 3, 4, 5, 4, 3, 4, 1];
   let cellIndex = 0;
   const cells: CellData[] = [];
 
-  for (let r = 0; r < ROWS.length; r++) {
-    for (let c = 0; c < ROWS[r]; c++) {
+  for (let c = 0; c < COLS.length; c++) {
+    for (let r = 0; r < COLS[c]; r++) {
       if (cellIndex < shuffled.length) {
         cells.push({
-          id: `cell-${r}-${c}`,
+          id: `cell-${c}-${r}`,
           row: r,
           col: c,
-          type: shuffled[cellIndex].type as 'letter' | 'gift' | 'boom',
+          type: shuffled[cellIndex].type as "letter" | "gift" | "boom",
           content: shuffled[cellIndex].content,
-          isRevealed: false
+          isRevealed: false,
         });
         cellIndex++;
       }
@@ -52,21 +58,24 @@ interface GameProps {
 export function Game({ isMuted, toggleMute }: GameProps) {
   const [cells, setCells] = useState<CellData[]>([]);
   const [collectedTiles, setCollectedTiles] = useState<TileData[]>([]);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">(
+    "playing",
+  );
   const [shake, setShake] = useState(false);
   const [activeGiftTile, setActiveGiftTile] = useState<TileData | null>(null);
-  const [loseType, setLoseType] = useState<'boom' | 'outOfTurns' | null>(null);
+  const [loseType, setLoseType] = useState<"boom" | "outOfTurns" | null>(null);
   const [flippingCellId, setFlippingCellId] = useState<string | null>(null);
   const [winningTiles, setWinningTiles] = useState<TileData[]>([]);
-  const [winType, setWinType] = useState<'word' | 'gift' | null>(null);
+  const [winType, setWinType] = useState<"word" | "gift" | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [showRules, setShowRules] = useState(false);
 
   const hasWonRef = useRef(false);
 
   const initGame = useCallback(() => {
     setCells(generateInitialCells());
     setCollectedTiles([]);
-    setGameStatus('playing');
+    setGameStatus("playing");
     setShake(false);
     setActiveGiftTile(null);
     setLoseType(null);
@@ -84,100 +93,137 @@ export function Game({ isMuted, toggleMute }: GameProps) {
   const actualTurnsLeft = MAX_TURNS - collectedTiles.length;
 
   useEffect(() => {
-    const extractedWords = collectedTiles.filter(t => !t.isDisabled).map(t => t.content);
+    const extractedWords = collectedTiles
+      .filter((t) => !t.isDisabled)
+      .map((t) => t.content);
 
-    const winningWords = ['Ko', 'Zo', 'Com'];
-    const hasKozocom = extractedWords.includes('Kozocom');
-    const hasAllParts = winningWords.every(word => extractedWords.includes(word));
+    const winningWords = ["Ko", "Zo", "Com"];
+    const hasKozocom = extractedWords.includes("Kozocom");
+    const hasAllParts = winningWords.every((word) =>
+      extractedWords.includes(word),
+    );
 
     if (hasKozocom || hasAllParts) {
       if (!hasWonRef.current) {
         if (hasKozocom) {
-          const kt = collectedTiles.find(t => t.content === 'Kozocom' && !t.isDisabled);
+          const kt = collectedTiles.find(
+            (t) => t.content === "Kozocom" && !t.isDisabled,
+          );
           if (kt) setWinningTiles([kt]);
         } else {
-          const parts = winningWords.map(word =>
-            collectedTiles.find(t => t.content === word && !t.isDisabled)
-          ).filter(Boolean) as TileData[];
+          const parts = winningWords
+            .map((word) =>
+              collectedTiles.find((t) => t.content === word && !t.isDisabled),
+            )
+            .filter(Boolean) as TileData[];
           setWinningTiles(parts);
         }
-        setWinType('word');
-        setGameStatus('won');
+        setWinType("word");
+        setGameStatus("won");
         audio.playWin();
         hasWonRef.current = true;
       }
     }
   }, [collectedTiles, gameStatus]);
 
-  const handleCellClick = (cell: CellData) => {
-    if (gameStatus !== 'playing' || actualTurnsLeft <= 0 || flippingCellId || isBusy) return;
+  const handleCellClick = useCallback(
+    (cell: CellData) => {
+      if (
+        gameStatus !== "playing" ||
+        actualTurnsLeft <= 0 ||
+        flippingCellId ||
+        isBusy
+      )
+        return;
 
-    audio.playClick();
-    setIsBusy(true);
+      audio.playClick();
+      setIsBusy(true);
 
-    // Mark as revealed in grid
-    setCells(prev => prev.map(c => c.id === cell.id ? { ...c, isRevealed: true } : c));
-    setFlippingCellId(cell.id);
+      // Mark as revealed in grid
+      setCells((prev) =>
+        prev.map((c) => (c.id === cell.id ? { ...c, isRevealed: true } : c)),
+      );
+      setFlippingCellId(cell.id);
 
-    // Wait for flip animation
-    setTimeout(() => {
-      setFlippingCellId(null);
+      // Wait for flip animation
+      setTimeout(() => {
+        setFlippingCellId(null);
 
-      const newTile: TileData = {
-        ...cell,
-        isDisabled: false
-      };
+        const newTile: TileData = {
+          ...cell,
+          isDisabled: false,
+        };
 
-      setCollectedTiles(prev => {
-        const newTiles = [...prev, newTile];
-        const isLastTurn = MAX_TURNS - newTiles.length <= 0;
+        setCollectedTiles((prev) => {
+          const newTiles = [...prev, newTile];
+          const isLastTurn = MAX_TURNS - newTiles.length <= 0;
 
-        if (cell.type === 'boom') {
-          setTimeout(() => setShake(true), 100);
-          setTimeout(() => {
-            setLoseType('boom');
-            setGameStatus(status => status === 'playing' ? 'lost' : status);
-            audio.playBoom();
-          }, 500);
-        } else if (cell.type === 'gift') {
-          setTimeout(() => {
-            setActiveGiftTile(newTile);
-            audio.playGift();
-          }, 400);
-        } else {
-          if (isLastTurn) {
-            const prevExtracted = prev.filter(t => !t.isDisabled).map(t => t.content);
-            const extractedWords = [...prevExtracted, newTile.content];
-            const isKozocomWin = newTile.content === 'Kozocom';
-            const isWordWin = extractedWords.includes('Ko') && extractedWords.includes('Zo') && extractedWords.includes('Com');
-            const isWin = isKozocomWin || isWordWin;
-
-            if (isWin) {
-              if (isKozocomWin) {
-                setWinningTiles([newTile]);
-                setWinType('word');
-              }
-            } else {
-              setTimeout(() => {
-                setLoseType('outOfTurns');
-                setGameStatus(status => status === 'playing' ? 'lost' : status);
-              }, 400);
-            }
-          } else if (cell.content === 'Kozocom') {
-            setWinningTiles([newTile]);
-            setWinType('word');
+          if (cell.type === "boom") {
+            setTimeout(() => setShake(true), 100);
+            setTimeout(() => {
+              setLoseType("boom");
+              setGameStatus((status) =>
+                status === "playing" ? "lost" : status,
+              );
+              audio.playBoom();
+            }, 500);
+          } else if (cell.type === "gift") {
+            setTimeout(() => {
+              setActiveGiftTile(newTile);
+              audio.playGift();
+            }, 400);
           } else {
-            setIsBusy(false);
+            if (isLastTurn) {
+              const prevExtracted = prev
+                .filter((t) => !t.isDisabled)
+                .map((t) => t.content);
+              const extractedWords = [...prevExtracted, newTile.content];
+              const isKozocomWin = newTile.content === "Kozocom";
+              const isWordWin =
+                extractedWords.includes("Ko") &&
+                extractedWords.includes("Zo") &&
+                extractedWords.includes("Com");
+              const isWin = isKozocomWin || isWordWin;
+
+              if (isWin) {
+                if (isKozocomWin) {
+                  setWinningTiles([newTile]);
+                  setWinType("word");
+                }
+              } else {
+                setTimeout(() => {
+                  setLoseType("outOfTurns");
+                  setGameStatus((status) =>
+                    status === "playing" ? "lost" : status,
+                  );
+                }, 400);
+              }
+            } else if (cell.content === "Kozocom") {
+              setWinningTiles([newTile]);
+              setWinType("word");
+            } else {
+              setIsBusy(false);
+            }
           }
-        }
-        return newTiles;
-      });
-    }, 0);
-  };
+          return newTiles;
+        });
+      }, 400);
+    },
+    [
+      gameStatus,
+      actualTurnsLeft,
+      flippingCellId,
+      isBusy,
+      setCells,
+      setFlippingCellId,
+      setCollectedTiles,
+      setIsBusy,
+    ],
+  );
 
   const handleClaimGift = () => {
-    setWinType('gift');
-    setGameStatus('won');
+    setWinType("gift");
+    setGameStatus("won");
     audio.playWin();
     setActiveGiftTile(null);
   };
@@ -186,13 +232,17 @@ export function Game({ isMuted, toggleMute }: GameProps) {
     setActiveGiftTile(null);
     setIsBusy(false);
     if (activeGiftTile) {
-      setCollectedTiles(prev => {
-        const newTiles = prev.map(t => t.id === activeGiftTile.id ? { ...t, isDisabled: true } : t);
+      setCollectedTiles((prev) => {
+        const newTiles = prev.map((t) =>
+          t.id === activeGiftTile.id ? { ...t, isDisabled: true } : t,
+        );
         const isLastTurn = MAX_TURNS - newTiles.length <= 0;
         if (isLastTurn) {
           setTimeout(() => {
-            setLoseType('outOfTurns');
-            setGameStatus(prevStatus => prevStatus === 'playing' ? 'lost' : prevStatus);
+            setLoseType("outOfTurns");
+            setGameStatus((prevStatus) =>
+              prevStatus === "playing" ? "lost" : prevStatus,
+            );
           }, 300);
         }
         return newTiles;
@@ -202,16 +252,47 @@ export function Game({ isMuted, toggleMute }: GameProps) {
 
   return (
     <Layout shake={shake}>
-      <Header
-        isMuted={isMuted}
-        toggleMute={toggleMute}
-        turnsLeft={actualTurnsLeft}
-        maxTurns={MAX_TURNS}
-      />
+      <Header />
 
-      <div className="w-full flex-1 flex flex-col items-center justify-center relative mt-16 z-20">
-        <HexagonGrid cells={cells} collectedTiles={collectedTiles} onCellClick={handleCellClick} flippingCellId={flippingCellId} />
+      <div className="w-full flex-1 flex flex-col items-center justify-center relative z-20 overflow-hidden -translate-y-[68px]">
+        <HexagonGrid
+          cells={cells}
+          collectedTiles={collectedTiles}
+          onCellClick={handleCellClick}
+          flippingCellId={flippingCellId}
+        />
         <CollectionTray tiles={collectedTiles} maxSlots={MAX_TURNS} />
+      </div>
+
+      {/* Bottom Corner Buttons */}
+      <div className="fixed bottom-19 left-21 z-50">
+        <button
+          onClick={() => setShowRules(true)}
+          className="transition-transform active:scale-90 hover:brightness-110"
+        >
+          <img
+            src="/src/bee-word-search/assets/button_help.png"
+            alt="Help"
+            className="w-full h-full object-contain drop-shadow-lg"
+          />
+        </button>
+      </div>
+
+      <div className="fixed bottom-19 right-21 z-50">
+        <button
+          onClick={toggleMute}
+          className="transition-transform active:scale-90 hover:brightness-110"
+        >
+          <img
+            src={
+              isMuted
+                ? "/src/bee-word-search/assets/button_sound_off.png"
+                : "/src/bee-word-search/assets/button_sound_on.png"
+            }
+            alt="Sound"
+            className="w-full h-full object-contain drop-shadow-lg"
+          />
+        </button>
       </div>
 
       <GiftModal
@@ -221,22 +302,28 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       />
 
       <LoseModal
-        isOpen={gameStatus === 'lost'}
+        isOpen={gameStatus === "lost"}
         type={loseType}
         onRestart={initGame}
       />
 
       <WinModal
-        isOpen={gameStatus === 'won' && winType === 'word'}
+        isOpen={gameStatus === "won" && winType === "word"}
         onRestart={initGame}
         winningTiles={winningTiles}
       />
 
       <GiftWinModal
-        isOpen={gameStatus === 'won' && winType === 'gift'}
+        isOpen={gameStatus === "won" && winType === "gift"}
         onRestart={initGame}
-        giftTile={activeGiftTile || collectedTiles.find(t => t.type === 'gift' && !t.isDisabled) || null}
+        giftTile={
+          activeGiftTile ||
+          collectedTiles.find((t) => t.type === "gift" && !t.isDisabled) ||
+          null
+        }
       />
+
+      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </Layout>
   );
 }
