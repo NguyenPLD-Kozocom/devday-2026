@@ -282,7 +282,7 @@ function App() {
       />
 
       <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center">
-        <div className="pointer-events-auto flex -translate-y-[max(50px,6.5vh)] flex-col items-center gap-[clamp(1rem,7vh,4rem)]">
+        <div className="pointer-events-auto flex -translate-y-[max(50px,5vh)] flex-col items-center gap-[clamp(1rem,7vh,4rem)]">
           <p
             className="font-technology leading-none tracking-tight text-white [text-shadow:2px_2px_8px_rgba(1,35,127,0.6)] [-webkit-text-stroke:1px_#DCFAFF]"
             aria-live="polite"
@@ -326,7 +326,7 @@ function App() {
       </div>
 
       <div
-        className="absolute -bottom-[2px] left-[min(80px,4.17vw)] right-[min(80px,4.17vw)] h-[min(420px,43.5vh)] rounded-tl-[40px] rounded-tr-[40px] p-[3px]"
+        className="absolute -bottom-[2px] left-[min(80px,4.17vw)] right-[min(80px,4.17vw)] h-[min(476px,44.1vh)] rounded-tl-[40px] rounded-tr-[40px] p-[3px]"
         style={{
           background: "linear-gradient(180deg, #35A3EF 0%, #0039BB 100%)",
         }}
