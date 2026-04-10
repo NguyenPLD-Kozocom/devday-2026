@@ -10,6 +10,8 @@ interface GiftGroupProps {
   /** Mô tả nhỏ bên dưới */
   description: string;
   descriptionClassName?: string;
+  /** Jackpot: màu vàng / gradient như modal kết quả jackpot */
+  variant?: "default" | "jackpot";
   /** Override className của wrapper ngoài cùng */
   className?: string;
 }
@@ -21,6 +23,7 @@ export const GiftGroup = ({
   labelClassName,
   description,
   descriptionClassName,
+  variant = "default",
   className,
 }: GiftGroupProps) => {
   return (
@@ -52,7 +55,10 @@ export const GiftGroup = ({
       </div>
       <span
         className={cn(
-          "text-white text-[min(1.625rem,1.354vw)] font-main text-center leading-none",
+          "font-main text-center leading-none",
+          variant === "jackpot"
+            ? "bg-gradient-to-b from-[#fffef5] via-[#fef08a] to-[#ca8a04] bg-clip-text text-transparent text-[clamp(1.75rem,3.5vw,2.75rem)] font-semibold drop-shadow-[0_2px_14px_rgba(250,204,21,0.55)] [-webkit-text-stroke:0.5px_rgba(180,83,9,0.2)]"
+            : "text-white text-[min(1.625rem,1.354vw)]",
           descriptionClassName,
         )}
       >

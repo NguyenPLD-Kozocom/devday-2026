@@ -742,11 +742,11 @@ function App() {
             />
             <GiftGroup
               imageSrc={gift2Img}
+              variant="jackpot"
               className="gap-4"
               imageClassName="w-[min(383px,19.95vw)] h-[min(180px,16.67vh)]"
               label="Áo thun + Gấu + Ly giữ nhiệt"
               description="10.00"
-              descriptionClassName="text-[32px] font-bold leading-none"
             />
             <GiftGroup
               imageSrc={gift3Img}
