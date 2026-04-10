@@ -41,7 +41,7 @@ const SCREENS = [
       title: "HÌNH THỨC QUAY THƯỞNG:",
       items: [
         "Ban tổ chức sẽ tiến hành quay số để tìm ra người thắng cuộc lần lượt cho 3 hạng mục: Giải Ba, Giải Nhì và Giải Nhất.",
-        "Mỗi giải sẽ được xác định bằng cách quay 3 lần để chọn ra từng chữ số từ trái sang phải.",
+        "Mỗi dãy số trúng thưởng gồm 3 chữ số, được quay ngẫu nhiên, lần lượt từ trái sang phải.",
       ],
     },
     right: {

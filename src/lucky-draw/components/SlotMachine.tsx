@@ -11,6 +11,7 @@ import Confetti from "./Confetti";
 import spinSfxUrl from "../assets/spin.mp3";
 import tadaSfxUrl from "../assets/tada.mp3";
 import { useSfxOverlayWhile, useSoundSettings } from "../SoundSettingsContext";
+import logoGame from "../assets/logo-game.png";
 
 /** Bay lên + phóng to tại ô quay (giây), sau đó bay chậm vào ô kết quả */
 const FLY_RISE_DURATION_SEC = 4;
@@ -44,6 +45,7 @@ const parseDigitFromReelEl = (el: Element | null | undefined) => {
 
 interface SlotMachineProps {
   compact?: boolean;
+  maxSpinDigit?: number;
   boardSlotRefs?: React.MutableRefObject<(HTMLDivElement | null)[]> | null;
   onBoardStateChange?:
     | ((state: { board: (number | null)[]; results: number[] }) => void)
@@ -59,6 +61,7 @@ interface SlotMachineProps {
  */
 export default function SlotMachine({
   compact = false,
+  maxSpinDigit = 9,
   boardSlotRefs: externalBoardSlotRefs = null,
   onBoardStateChange = null,
 }: SlotMachineProps) {
@@ -86,6 +89,7 @@ export default function SlotMachine({
   ]);
   const boardRefs = externalBoardSlotRefs ?? internalBoardRefs;
   const showInlineBoard = !externalBoardSlotRefs;
+  const safeMaxSpinDigit = Math.max(0, Math.min(9, maxSpinDigit));
   const spinDoneRef = useRef(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const resultsRef = useRef(results);
@@ -173,33 +177,49 @@ export default function SlotMachine({
     queueMicrotask(() => setReelSpinFromDigit(null));
   }, [phase]);
 
+  useEffect(() => {
+    setPhase("idle");
+    setRoundIndex(0);
+    setSpinKey((k) => k + 1);
+    setResults([0, 0, 0]);
+    setIdleDigit(0);
+    setBoard([null, null, null]);
+    setShowConfetti(false);
+    setFlyPos(null);
+    setLandedPulse(null);
+    setReelSpinFromDigit(null);
+    setReelIdleShowsDigit(true);
+    spinDoneRef.current = false;
+    flyPayloadRef.current = null;
+  }, [safeMaxSpinDigit]);
+
   const completeRoundAfterDigit = useCallback(
     (ri: number, digitOverride?: number | null) => {
-    const val =
-      digitOverride !== undefined && digitOverride !== null
-        ? digitOverride
-        : resultsRef.current[ri];
-    setIdleDigit(val);
-    setBoard((prev) => {
-      const next = [...prev];
-      next[ri] = val;
-      return next;
-    });
-    setResults((prev) => {
-      if (prev[ri] === val) return prev;
-      const next = [...prev];
-      next[ri] = val;
-      return next;
-    });
-    setReelIdleShowsDigit(false);
-    if (ri < 2) {
-      setRoundIndex(ri + 1);
-      setPhase("idle");
-    } else {
-      setPhase("celebration");
-      setShowConfetti(true);
-    }
-  },
+      const val =
+        digitOverride !== undefined && digitOverride !== null
+          ? digitOverride
+          : resultsRef.current[ri];
+      setIdleDigit(val);
+      setBoard((prev) => {
+        const next = [...prev];
+        next[ri] = val;
+        return next;
+      });
+      setResults((prev) => {
+        if (prev[ri] === val) return prev;
+        const next = [...prev];
+        next[ri] = val;
+        return next;
+      });
+      setReelIdleShowsDigit(false);
+      if (ri < 2) {
+        setRoundIndex(ri + 1);
+        setPhase("idle");
+      } else {
+        setPhase("celebration");
+        setShowConfetti(true);
+      }
+    },
     [],
   );
 
@@ -293,9 +313,9 @@ export default function SlotMachine({
     if (isNewGame) {
       setIdleDigit(0);
       setResults([
-        Math.floor(Math.random() * 10),
-        Math.floor(Math.random() * 10),
-        Math.floor(Math.random() * 10),
+        Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
+        Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
+        Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
       ]);
       setRoundIndex(0);
       setShowConfetti(false);
@@ -320,7 +340,7 @@ export default function SlotMachine({
     if (soundEnabled) {
       void spin.play().catch(() => {});
     }
-  }, [phase, board, idleDigit, soundEnabled]);
+  }, [phase, board, idleDigit, soundEnabled, safeMaxSpinDigit]);
 
   const reelMode =
     phase === "spinning" ? "spinning" : phase === "flying" ? "locked" : "idle";
@@ -393,6 +413,7 @@ export default function SlotMachine({
         <VerticalReel
           spinKey={spinKey}
           targetValue={results[roundIndex]}
+          maxDigit={safeMaxSpinDigit}
           idleValue={idleDigit}
           spinFromDigit={reelSpinFromDigit}
           mode={reelMode}
@@ -402,6 +423,11 @@ export default function SlotMachine({
           onPull={handlePull}
           pullDisabled={phase !== "idle"}
           onSpinComplete={handleSpinComplete}
+        />
+        <img
+          src={logoGame}
+          alt="Lottery Game"
+          className="absolute top-9/12 left-[30px] h-[200px] object-contain"
         />
       </div>
 

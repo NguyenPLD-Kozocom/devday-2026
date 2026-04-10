@@ -15,12 +15,8 @@ const SLOT = {
 };
 
 /** Số vòng 0–9 (đủ dài, không kéo quá lâu) */
-const FULL_ROTATIONS = 15;
-const ROWS_PER_ROTATION = 10;
-const ROWS_TRAVEL = FULL_ROTATIONS * ROWS_PER_ROTATION;
-/** Đủ hàng: mốc đầu có thể = đích + ROWS_TRAVEL + căn chữ số (tối đa ~2×ROWS_TRAVEL) */
-const SPIN_CYCLES = Math.ceil((ROWS_TRAVEL * 2 + 19) / ROWS_PER_ROTATION);
-const SPIN_DURATION_SEC = 14;
+const FULL_ROTATIONS = 8;
+const SPIN_DURATION_SEC = 8;
 
 /**
  * Một đường cong duy nhất: p(t) = tích phân chuẩn từ v(t) ∝ t^a·(1−t)^b.
@@ -29,7 +25,7 @@ const SPIN_DURATION_SEC = 14;
 const createSpinEase = () => {
   const a = 2.05;
   const b = 4.25;
-  const STEPS = 2048;
+  const STEPS = 384;
   const cumulative = new Float64Array(STEPS + 1);
   cumulative[0] = 0;
   for (let i = 0; i < STEPS; i++) {
@@ -56,6 +52,7 @@ export type VerticalReelProps = {
   targetValue: number;
   spinKey: number;
   mode: VerticalReelMode;
+  maxDigit?: number;
   compact?: boolean;
   idleValue?: number;
   /** Số đang hiển thị lúc kéo (từ parent, chụp trước setIdleDigit). Ưu tiên hơn idleValue khi quay. */
@@ -76,6 +73,7 @@ export default function VerticalReel({
   targetValue,
   spinKey,
   mode,
+  maxDigit = 9,
   compact = false,
   idleValue = 0,
   spinFromDigit = null,
@@ -85,12 +83,19 @@ export default function VerticalReel({
   pullDisabled = false,
   onSpinComplete,
 }: VerticalReelProps) {
+  const digitCount = Math.max(1, Math.min(10, maxDigit + 1));
+  const rowsPerRotation = digitCount;
+  const rowsTravel = FULL_ROTATIONS * rowsPerRotation;
+  const spinCycles = Math.ceil(
+    (rowsTravel * 2 + (digitCount * 2 - 1)) / rowsPerRotation,
+  );
   const strip = Array.from(
-    { length: SPIN_CYCLES * ROWS_PER_ROTATION },
-    (_, i) => i % 10,
+    { length: spinCycles * digitCount },
+    (_, i) => i % digitCount,
   );
   /** Đích */
-  const finalRowIndex = ROWS_TRAVEL + targetValue;
+  const safeTargetValue = Math.max(0, Math.min(maxDigit, targetValue));
+  const finalRowIndex = rowsTravel + safeTargetValue;
   /**
    * Chiều từ trên xuống: translateY tăng dần (từ âm hơn → ít âm hơn) → bắt đầu ở hàng chỉ số lớn, về đích nhỏ hơn.
    * Căn modulo 10 để ô đầu vẫn hiển thị đúng số lúc kéo (startDigit).
@@ -99,27 +104,24 @@ export default function VerticalReel({
     spinFromDigit !== null && spinFromDigit !== undefined
       ? spinFromDigit
       : idleValue;
-  const digitAlign = (startDigit - targetValue + 10) % 10;
-  const initialRowIndex = finalRowIndex + ROWS_TRAVEL + digitAlign;
+  const safeStartDigit = Math.max(0, Math.min(maxDigit, startDigit));
+  const digitAlign =
+    (safeStartDigit - safeTargetValue + digitCount) % digitCount;
+  const initialRowIndex = finalRowIndex + rowsTravel + digitAlign;
   const staticCycles = 3;
   const staticStrip = Array.from(
-    { length: staticCycles * 10 },
-    (_, i) => i % 10,
+    { length: staticCycles * digitCount },
+    (_, i) => i % digitCount,
   );
-  const staticValue = mode === "idle" ? idleValue : targetValue;
-  const staticTargetRowIndex = 10 + staticValue;
+  const staticValue =
+    mode === "idle"
+      ? Math.max(0, Math.min(maxDigit, idleValue))
+      : safeTargetValue;
+  const staticTargetRowIndex = digitCount + staticValue;
 
   const slotRef = useRef<HTMLDivElement | null>(null);
   const [slotH, setSlotH] = useState(48);
   const [rowH, setRowH] = useState(28.8);
-  /** null = chưa nhận frame đầu từ motion (dùng initialY để tính quãng cuộn) */
-  const [spinYTrack, setSpinYTrack] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (mode === "spinning") {
-      setSpinYTrack(null);
-    }
-  }, [mode, spinKey]);
 
   useEffect(() => {
     const el = slotRef.current;
@@ -149,15 +151,6 @@ export default function VerticalReel({
           duration: SPIN_DURATION_SEC,
           ease: SPIN_EASE,
         };
-  const slotCenterY = slotH / 2;
-
-  const effectiveSpinY =
-    spinYTrack === null || spinYTrack === undefined ? initialY : spinYTrack;
-  const scrolledFromSpinStartPx = Math.abs(effectiveSpinY - initialY);
-  const oneRotationPx = ROWS_PER_ROTATION * rowH;
-  const targetDigitVisibleAtCenter =
-    rowH > 0 && scrolledFromSpinStartPx >= oneRotationPx - 0.5;
-
   const frameClass = compact
     ? "h-[min(90vw,950px)] w-[min(90vw,620px)] max-h-[950px] max-w-[620px]"
     : "h-[1000px] w-[720px] md:w-[820px]";
@@ -181,7 +174,7 @@ export default function VerticalReel({
   };
 
   return (
-    <div className="relative -left-[20px] shrink-0">
+    <div className="relative -top-[150px] -left-[20px] shrink-0">
       <div
         className={`relative overflow-hidden rounded-[2px] ${frameClass}`}
         style={shellStyle}
@@ -254,70 +247,47 @@ export default function VerticalReel({
 
           {mode === "spinning" && (
             <div className="relative z-10 h-full w-full overflow-hidden">
+              <div
+                className="pointer-events-none absolute inset-0 z-20"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(0,40,90,0.42) 0%, transparent 22%, transparent 78%, rgba(0,40,90,0.42) 100%)",
+                }}
+                aria-hidden
+              />
               <MotionDiv
                 key={spinKey}
                 className="will-change-transform"
                 initial={{ y: initialY }}
                 animate={{ y: finalY }}
                 transition={spinTransition}
-                onUpdate={(latest) => {
-                  if (typeof latest.y === "number") setSpinYTrack(latest.y);
-                }}
                 onAnimationComplete={() => onSpinComplete?.()}
               >
-                {strip.map((d, i) => {
-                  const rowCenter = i * rowH + effectiveSpinY + rowH / 2;
-                  const distanceToCenter = Math.abs(rowCenter - slotCenterY);
-                  const proximity = Math.max(
-                    0,
-                    1 - distanceToCenter / (rowH * 0.9),
-                  );
-                  const isAtCenter = distanceToCenter <= rowH * 0.22;
-                  const opacity = 0.62 + proximity * 0.38;
-                  const blurPx = (1 - proximity) * 1.15;
-                  const glow = 0.2 + proximity * 0.28;
-                  /** Chỉ ẩn đúng chữ số trúng ở giữa khe cho đến khi cuộn đủ 1 vòng (10 hàng) */
-                  const hideTargetUntilOneRotation =
-                    isAtCenter &&
-                    d === targetValue &&
-                    !targetDigitVisibleAtCenter;
-                  const spanOpacity = hideTargetUntilOneRotation
-                    ? 0
-                    : isAtCenter
-                      ? 1
-                      : opacity;
-
-                  return (
-                    <div
-                      key={`${spinKey}-${i}`}
-                      className="flex items-center justify-center"
-                      style={{ height: rowH }}
+                {strip.map((d, i) => (
+                  <div
+                    key={`${spinKey}-${i}`}
+                    className="flex items-center justify-center"
+                    style={{ height: rowH }}
+                  >
+                    <span
+                      className="select-none leading-none"
+                      style={{
+                        fontFamily: "'Oswald', sans-serif",
+                        fontSize,
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        letterSpacing: "0.01em",
+                        fontVariantNumeric: "tabular-nums",
+                        color: "#cfe6ff",
+                        opacity: 0.9,
+                        textShadow:
+                          "0 0 10px rgba(155,220,255,0.35), 0 1px 0 rgba(0,0,0,0.2)",
+                      }}
                     >
-                      <span
-                        className="select-none leading-none"
-                        aria-hidden={hideTargetUntilOneRotation ? true : undefined}
-                        style={{
-                          fontFamily: "'Oswald', sans-serif",
-                          fontSize,
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          letterSpacing: "0.01em",
-                          fontVariantNumeric: "tabular-nums",
-                          color: isAtCenter ? "#ffffff" : "#9fc9ff",
-                          opacity: spanOpacity,
-                          textShadow: isAtCenter
-                            ? "0 1px 0 rgba(0,0,0,0.28)"
-                            : `0 0 ${6 + proximity * 8}px rgba(155,220,255,${glow})`,
-                          filter: isAtCenter
-                            ? "blur(0px)"
-                            : `blur(${blurPx}px)`,
-                        }}
-                      >
-                        {d}
-                      </span>
-                    </div>
-                  );
-                })}
+                      {d}
+                    </span>
+                  </div>
+                ))}
               </MotionDiv>
             </div>
           )}
