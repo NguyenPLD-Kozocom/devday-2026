@@ -16,7 +16,7 @@ const SLOT = {
 
 /** Số vòng 0–9 (đủ dài, không kéo quá lâu) */
 const FULL_ROTATIONS = 8;
-const SPIN_DURATION_SEC = 8;
+const SPIN_DURATION_SEC = 13;
 
 /**
  * Một đường cong duy nhất: p(t) = tích phân chuẩn từ v(t) ∝ t^a·(1−t)^b.

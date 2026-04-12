@@ -48,7 +48,7 @@ const PRIZE_TITLE_SVG = {
 export default function PrizeDetailScreen({ prizeId, onBack }) {
   const { soundEnabled, registerSfxOverlay } = useSoundSettings();
   const prize = getPrizeById(prizeId);
-  const digitTier = getDigitTier(prize.id);
+  const resultTier = getDigitTier(prize.id);
   const detailImageSize = prize.detailImageSize ?? {
     width: "420px",
     height: "480px",
@@ -330,11 +330,11 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                           {[0, 1, 2].map((i) => {
                             const filled = ticketBoard[i] !== null;
                             const slotClass = getLuckyDrawDigitSlotClassName({
-                              tier: digitTier,
+                              tier: resultTier,
                               filled,
                             });
                             const textStyle = getLuckyDrawDigitTextStyle({
-                              tier: digitTier,
+                              tier: resultTier,
                               filled,
                             });
                             const refCb = (el) => {
@@ -503,6 +503,7 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                   key={slotMachineKey}
                   compact
                   maxSpinDigit={maxSpinDigit}
+                  resultTier={resultTier}
                   boardSlotRefs={ticketSlotRefs}
                   onBoardStateChange={handleBoardStateChange}
                 />
