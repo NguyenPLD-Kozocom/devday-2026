@@ -9,6 +9,16 @@ function App() {
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
+    // Start music on mount
+    audio.playBgMusic();
+    
+    // Stop music on unmount
+    return () => {
+      audio.stopBgMusic();
+    };
+  }, []);
+
+  useEffect(() => {
     audio.setMuted(isMuted);
   }, [isMuted]);
 

@@ -5,6 +5,8 @@ import buttonDefault from "../assets/button-default.svg";
 import buttonSoundOn from "../assets/button_sound_on.png";
 import buttonSoundOff from "../assets/button_sound_off.png";
 
+import { audio } from "../utils/audio";
+
 interface StartScreenProps {
   onStart: () => void;
   onShowRules: () => void;
@@ -18,6 +20,21 @@ export function StartScreen({
   isMuted,
   toggleMute,
 }: StartScreenProps) {
+  const handleStart = () => {
+    audio.playClick();
+    onStart();
+  };
+
+  const handleShowRules = () => {
+    audio.playClick();
+    onShowRules();
+  };
+
+  const handleToggleMute = () => {
+    audio.playClick();
+    toggleMute();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-start-game select-none">
       {/* Background with honeycomb and dripping honey is handled via CSS class bg-start-game */}
@@ -69,7 +86,7 @@ export function StartScreen({
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={onStart}
+          onClick={handleStart}
           className="font-cubano group relative w-[350px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
@@ -86,7 +103,7 @@ export function StartScreen({
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={onShowRules}
+          onClick={handleShowRules}
           className="font-cubano group relative w-[350px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
@@ -105,7 +122,7 @@ export function StartScreen({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        onClick={toggleMute}
+        onClick={handleToggleMute}
         className="absolute bottom-8 right-8 z-20 w-14 h-14 sm:w-16 sm:h-16 active:scale-90 transition-transform cursor-pointer"
       >
         <img

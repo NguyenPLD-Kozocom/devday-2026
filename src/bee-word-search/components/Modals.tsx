@@ -8,6 +8,8 @@ import boomModal from "../assets/boom-modal.svg";
 import giftSpecial from "../assets/gift-spectial.svg";
 import giftUnboxModal from "../assets/gift-unbox-modal.svg";
 
+import { audio } from "../utils/audio";
+
 interface BaseModalProps {
   isOpen: boolean;
   type?: "info" | "error";
@@ -16,6 +18,7 @@ interface BaseModalProps {
   titleClassName?: string;
   imgClassName?: string;
   children: React.ReactNode;
+  isLarge?: boolean;
 }
 
 function Modal({
@@ -26,6 +29,7 @@ function Modal({
   titleClassName,
   imgClassName,
   children,
+  isLarge,
 }: BaseModalProps) {
   return (
     <AnimatePresence>
@@ -42,7 +46,10 @@ function Modal({
               initial={{ scale: 0.95, y: 10, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="px-[80px] flex items-center justify-between flex-col py-[60px] w-[930px] h-[752px] pointer-events-auto text-center relative text-white shadow-2xl"
+              className={cn(
+                "px-[80px] flex items-center justify-between flex-col py-[60px] w-[930px] pointer-events-auto text-center relative text-white shadow-2xl",
+                isLarge ? "h-[792px]" : "h-[752px]"
+              )}
               style={{
                 border: "8px solid transparent",
                 borderRadius: "40px",
@@ -55,7 +62,7 @@ function Modal({
               <img
                 src={icon}
                 alt=""
-                className={cn("mb-[60px]", imgClassName)}
+                className={cn("mb-[40px]", imgClassName)}
               />
               <h2
                 className={cn(
@@ -83,18 +90,32 @@ export function GiftModal({
   onClaim: () => void;
   onContinue: () => void;
 }) {
+  const handleClaim = () => {
+    audio.playClick();
+    onClaim();
+  };
+
+  const handleContinue = () => {
+    audio.playClick();
+    onContinue();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       icon={giftModal}
-      title={"Dừng lại nhận quà để tìm kiếm giải thưởng lớn hơn."}
+      title={""}
+      isLarge={true}
     >
-      <p className="text-[38px] mb-8 text-[#623C00] font-medium leading-[42px] mt-2">
-        Nếu tiếp tục và không may trúng Boom, quà trước đó sẽ bị hủy.
+      <p className="text-[38px] mb-2 text-[#623C00] font-medium leading-[1.2] mt-2">
+        <strong>Chúc mừng!</strong> Bạn có thể chọn <strong>Chốt quà!</strong> để nhận quà ngay, hoặc <strong>Tiếp tục chơi</strong> để săn giải thưởng lớn hơn.
+      </p>
+      <p className="text-[38px] mb-8 text-[#623C00] font-medium leading-[1.2]">
+        <strong>Cẩn thận nhé:</strong> Nếu trúng bom, toàn bộ quà trước đó sẽ bị hủy đấy!
       </p>
       <div className="flex items-center justify-center flex-row gap-[50px]">
         <button
-          onClick={onClaim}
+          onClick={handleClaim}
           className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
@@ -103,11 +124,11 @@ export function GiftModal({
             className="absolute inset-0 w-full h-full object-cover"
           />
           <span className="btn-label relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-            Dừng lại
+            Chốt quà!
           </span>
         </button>
         <button
-          onClick={onContinue}
+          onClick={handleContinue}
           className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
         >
           <img
@@ -133,21 +154,26 @@ export function LoseModal({
   type: "boom" | "outOfTurns" | null;
   onRestart: () => void;
 }) {
+  const handleRestart = () => {
+    audio.playClick();
+    onRestart();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       type="error"
       icon={boomModal}
-      title={"Oh no!"}
+      title={"Ối giời ôi! Nổ rồi!"}
       titleClassName="font-bold"
     >
       <p className="text-[38px] mb-8 text-[#623C00] font-medium">
         {type === "boom"
-          ? "Bạn đã mất lượt chơi rồi."
+          ? "...nhưng là nổ bom. Xin chia buồn!"
           : "Bạn đã hết lượt chơi rồi."}
       </p>
       <button
-        onClick={onRestart}
+        onClick={handleRestart}
         className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
       >
         <img
@@ -174,22 +200,27 @@ export function WinModal({
 }) {
   const isSpecial = winningTiles?.some((t) => t.content === "Kozocom");
 
+  const handleRestart = () => {
+    audio.playClick();
+    onRestart();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       icon={giftSpecial}
-      title={isSpecial ? "Bạn thì đỉnh rồi!" : "Chúc mừng! Bạn đã hoàn thành."}
+      title={isSpecial ? "Đỉnh của chóp!" : "Chúc mừng! Bạn đã hoàn thành."}
       titleClassName="font-bold mt-[320px]"
       imgClassName="absolute -top-[68px]"
     >
       <p className="text-[38px] text-[#623C00] font-medium leading-[42px] mt-2 mb-[60px]">
         {isSpecial
-          ? "Hốt hết combo quà từ Kozocom nào."
+          ? "May mắn nhất hệ mặt trời. Người đâu, ban ngay Phần quà đặc biệt!"
           : "Bạn đã ghép đủ chữ Kozocom. Tiếp tục phát huy nhé!"}
       </p>
 
       <button
-        onClick={onRestart}
+        onClick={handleRestart}
         className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer"
       >
         <img
@@ -212,19 +243,25 @@ export function GiftWinModal({
   isOpen: boolean;
   onRestart: () => void;
 }) {
+  const handleRestart = () => {
+    audio.playClick();
+    onRestart();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       icon={giftUnboxModal}
-      title={
-        "Chúc mừng bạn đã là chủ nhân tiếp theo của phần quà đến từ Kozocom!"
-      }
-      imgClassName="absolute -top-[68px]"
-      titleClassName="mt-[345px]"
+      title={"Chốt quà thành công!"}
+      imgClassName="absolute top-0"
+      titleClassName="mt-[345px] font-bold"
     >
+      <p className="text-[38px] text-[#623C00] font-medium leading-[1.2] mt-4 mb-4 px-10">
+        Đúng hệ "ăn chắc mặc bền". Chúc mừng bạn đã rinh về quà xịn từ Kozocom!
+      </p>
       <button
-        onClick={onRestart}
-        className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer mt-[60px]"
+        onClick={handleRestart}
+        className="font-cubano group relative w-[375px] aspect-286/75 flex items-center justify-center transition-all duration-300 cursor-pointer mt-[20px]"
       >
         <img
           src={buttonDefault}
@@ -232,7 +269,7 @@ export function GiftWinModal({
           className="absolute inset-0 w-full h-full object-cover"
         />
         <span className="btn-label relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-          Chơi lại
+          CHƠI LẠI
         </span>
       </button>
     </Modal>

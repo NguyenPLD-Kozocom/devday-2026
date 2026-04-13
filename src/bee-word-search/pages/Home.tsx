@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { StartScreen } from "../components/StartScreen";
 import { RulesModal } from "../components/RulesModal";
+import { audio } from "../utils/audio";
 
 interface HomeProps {
   isMuted: boolean;
@@ -13,6 +14,7 @@ export function Home({ isMuted, toggleMute }: HomeProps) {
   const [showRules, setShowRules] = useState(false);
 
   const handleStart = () => {
+    audio.playBgMusic();
     navigate("game");
   };
 

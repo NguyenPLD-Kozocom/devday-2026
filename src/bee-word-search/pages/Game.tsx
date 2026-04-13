@@ -139,6 +139,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       )
         return;
 
+      audio.playBgMusic();
       audio.playClick();
       setIsBusy(true);
 
@@ -270,7 +271,10 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       {/* Bottom Corner Buttons */}
       <div className="fixed bottom-19 left-21 z-50">
         <button
-          onClick={() => setShowRules(true)}
+          onClick={() => {
+            audio.playClick();
+            setShowRules(true);
+          }}
           className="transition-transform active:scale-90 hover:brightness-110"
         >
           <img
@@ -283,7 +287,10 @@ export function Game({ isMuted, toggleMute }: GameProps) {
 
       <div className="fixed bottom-19 right-21 z-50">
         <button
-          onClick={toggleMute}
+          onClick={() => {
+            audio.playClick();
+            toggleMute();
+          }}
           className="transition-transform active:scale-90 hover:brightness-110"
         >
           <img
