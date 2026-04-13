@@ -3,6 +3,11 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { PRIZE_IDS } from "../prizes";
+import prizeResultStinger1Url from "../assets/prize-1-1.mp3";
+import prizeResultStinger2Url from "../assets/prize-1-2.mp3";
+import prizeResultBackgroundGoldUrl from "../assets/prize-1-background.mp3";
+import prizeResultBackgroundSilverUrl from "../assets/prize-2-background.mp3";
+import prizeResultBackgroundBronzeUrl from "../assets/prize-3-background.mp3";
 import firstPrizeFinal from "../assets/1st-prize-final.svg";
 import secondPrizeFinal from "../assets/2nd-prize-final.svg";
 import thirdPrizeFinal from "../assets/3rd-prize.final.svg";
@@ -10,6 +15,7 @@ import {
   getLuckyDrawDigitSlotClassName,
   getLuckyDrawDigitTextStyle,
 } from "../ticketDigitTheme";
+import { useSoundSettings } from "../SoundSettingsContext";
 
 /** Transition cho layoutId ô số (vé bay → modal). */
 export const ldResultDigitLayoutTransition = {
@@ -60,6 +66,12 @@ const LD_NEAR_BRONZE_COLORS = [
   "#f97316",
   "#FFFFFF",
 ];
+
+const RESULT_LOOP_BACKGROUND_BY_TIER = {
+  gold: prizeResultBackgroundGoldUrl,
+  silver: prizeResultBackgroundSilverUrl,
+  bronze: prizeResultBackgroundBronzeUrl,
+};
 
 /** Cùng palette `JACKPOT_CONFETTI_COLORS` trong ten-seconds/App.tsx */
 const LD_JACKPOT_CONFETTI_COLORS = [
@@ -213,6 +225,49 @@ const LuckyDrawJackpotConfetti = () => {
   );
 };
 
+/**
+ * `prize-1-1` → `prize-1-2` tuần tự; nhạc nền theo hạng (lặp).
+ * Nhạc nền app đã tắt ở PrizeDetailScreen trong suốt màn kết quả.
+ * @param {{ soundEnabled: boolean, looperBackgroundSrc: string }} props
+ */
+const LuckyDrawResultStingerSfx = ({ soundEnabled, looperBackgroundSrc }) => {
+  useEffect(() => {
+    if (!soundEnabled) return;
+
+    const bg = new Audio(looperBackgroundSrc);
+    bg.loop = true;
+    bg.volume = 0.42;
+    void bg.play().catch(() => {});
+
+    const audio1 = new Audio(prizeResultStinger1Url);
+    const audio2 = new Audio(prizeResultStinger2Url);
+    audio1.volume = 0.88;
+    audio2.volume = 0.88;
+
+    const handleAudio1Ended = () => {
+      audio1.removeEventListener("ended", handleAudio1Ended);
+      void audio2.play().catch(() => {});
+    };
+
+    audio1.addEventListener("ended", handleAudio1Ended);
+    void audio1.play().catch(() => {
+      audio1.removeEventListener("ended", handleAudio1Ended);
+    });
+
+    return () => {
+      audio1.removeEventListener("ended", handleAudio1Ended);
+      bg.pause();
+      bg.currentTime = 0;
+      audio1.pause();
+      audio1.currentTime = 0;
+      audio2.pause();
+      audio2.currentTime = 0;
+    };
+  }, [soundEnabled, looperBackgroundSrc]);
+
+  return null;
+};
+
 const DiscoLights = () => (
   <div
     className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -285,11 +340,17 @@ export const getResultTier = (prizeId) =>
  */
 export const LuckyDrawResultEffects = ({ prizeId }) => {
   const tier = getResultTier(prizeId);
+  const { soundEnabled } = useSoundSettings();
+  const looperBackgroundSrc = RESULT_LOOP_BACKGROUND_BY_TIER[tier];
   return (
     <div
       className="pointer-events-none fixed inset-0 z-[112] overflow-hidden"
       aria-hidden
     >
+      <LuckyDrawResultStingerSfx
+        soundEnabled={soundEnabled}
+        looperBackgroundSrc={looperBackgroundSrc}
+      />
       {tier === "gold" && (
         <>
           <DiscoLights />
@@ -334,13 +395,20 @@ export const LuckyDrawExpandedTicketContent = ({
     ease: prizeRevealEase,
   };
 
-  const prizeBlockClass =
-    tier === "gold"
-      ? "h-[360px] shrink-0 md:h-[400px]"
-      : "h-[320px] shrink-0 md:h-[360px]";
+  /** Khung dialog giống giải vàng cho cả ba hạng. */
+  const prizeBlockClass = "h-[min(336px,56vh)] shrink-0 md:h-[min(392px,50vh)]";
+  const prizeArtMaxHClass =
+    "max-h-[min(600px,72vh)] md:max-h-[min(640px,58vh)]";
+  const isBronze = tier === "bronze";
+  const isSilver = tier === "silver";
+  const prizeArtRevealScale = isBronze ? 1.5 : isSilver ? 0.8 : 1.2;
+  const prizeBlockOverflow = isBronze ? "overflow-visible" : "overflow-hidden";
+  const rootOverflow = isBronze ? "overflow-visible" : "overflow-hidden";
 
   return (
-    <div className="relative isolate flex w-full flex-col items-center gap-3 overflow-hidden rounded-[20px] md:gap-4 md:rounded-[24px]">
+    <div
+      className={`relative isolate flex w-full flex-col items-center gap-4 ${rootOverflow} rounded-[20px] md:gap-5 md:rounded-[24px]`}
+    >
       <motion.div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
         initial={false}
@@ -350,25 +418,23 @@ export const LuckyDrawExpandedTicketContent = ({
         <ResultSpotlightFunnel tier={tier} />
       </motion.div>
       <div
-        className={`relative flex w-full flex-col items-center justify-center gap-1 overflow-hidden ${prizeBlockClass}`}
+        className={`relative flex w-full flex-col items-center justify-center gap-1 ${prizeBlockOverflow} ${prizeBlockClass}`}
       >
         <motion.img
           src={artSrc}
           alt={prizeName}
-          className={`relative z-[1] w-full max-w-full flex-1 min-h-0 origin-center object-contain drop-shadow-[0_12px_32px_rgba(15,23,42,0.22)] ${
-            tier === "gold"
-              ? "max-h-[min(300px,52vh)] md:max-h-[min(340px,48vh)]"
-              : "max-h-[min(260px,46vh)] md:max-h-[min(300px,44vh)]"
-          }`}
+          className={`relative z-[1] w-full max-w-full flex-1 min-h-0 origin-center object-contain drop-shadow-[0_12px_32px_rgba(15,23,42,0.22)] ${prizeArtMaxHClass}`}
           initial={false}
           animate={
-            prizeHidden ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }
+            prizeHidden
+              ? { opacity: 0, scale: 0 }
+              : { opacity: 1, scale: prizeArtRevealScale }
           }
           transition={prizeTransition}
         />
         <motion.p
           id="lucky-draw-result-label"
-          className={`relative z-[1] shrink-0 text-center font-semibold uppercase tracking-[0.18em] md:tracking-[0.22em] ${
+          className={`relative z-[1] shrink-0 text-center font-semibold uppercase leading-tight tracking-[0.16em] md:tracking-[0.2em] ${
             tier === "gold"
               ? "text-sm text-amber-900/90 md:text-base"
               : tier === "silver"
@@ -388,7 +454,7 @@ export const LuckyDrawExpandedTicketContent = ({
         </motion.p>
       </div>
       <div
-        className={`relative z-[1] flex w-full justify-center gap-2 sm:gap-3 md:gap-4 ${wide ? "max-w-none" : "max-w-[400px]"}`}
+        className={`relative z-[1] flex w-full justify-center gap-3 sm:gap-4 md:gap-5 ${wide ? "max-w-none" : "max-w-[400px]"}`}
         role="group"
         aria-label="Ba chữ số kết quả"
       >
@@ -408,7 +474,10 @@ export const LuckyDrawExpandedTicketContent = ({
           >
             <span
               className="select-none tabular-nums"
-              style={getLuckyDrawDigitTextStyle({ tier, filled: true })}
+              style={getLuckyDrawDigitTextStyle({
+                tier,
+                filled: true,
+              })}
             >
               {d}
             </span>

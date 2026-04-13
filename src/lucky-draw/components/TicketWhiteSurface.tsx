@@ -2,13 +2,17 @@
 /**
  * White ticket surface: static border + wash + CSS shimmer (GPU-friendly).
  * You can later set `background-image` on the root div (with bg-cover / bg-center) for a full ticket graphic.
- * @param {{ children: import("react").ReactNode, className?: string }} props
+ * @param {{ children: import("react").ReactNode, className?: string, overflow?: 'hidden' | 'visible' }} props
  */
-export default function TicketWhiteSurface({ children, className = "" }) {
+export default function TicketWhiteSurface({
+  children,
+  className = "",
+  overflow = "hidden",
+}) {
+  const overflowClass =
+    overflow === "visible" ? "overflow-visible" : "overflow-hidden";
   return (
-    <div
-      className={`relative overflow-hidden bg-white ${className}`.trim()}
-    >
+    <div className={`relative ${overflowClass} bg-white ${className}`.trim()}>
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit] shadow-[inset_0_0_0_1px_rgba(79,166,255,0.28)]"

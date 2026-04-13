@@ -17,6 +17,8 @@ import {
   getLuckyDrawSideBoardSlotClassName,
 } from "../ticketDigitTheme";
 
+type ResultTier = "gold" | "silver" | "bronze";
+
 /** Bay lên + phóng to tại ô quay (giây), sau đó bay chậm vào ô kết quả */
 const FLY_RISE_DURATION_SEC = 4;
 const FLY_TO_SLOT_DURATION_SEC = 2.5;
@@ -47,12 +49,11 @@ const parseDigitFromReelEl = (el: Element | null | undefined) => {
   return null;
 };
 
-type ResultTier = "gold" | "silver" | "bronze";
-
 interface SlotMachineProps {
   compact?: boolean;
+  /** Giới hạn trên khi quay (0…N); chỉ ô kết quả đầu tiên; hai ô sau luôn 0–9. */
   maxSpinDigit?: number;
-  /** Màu 3 ô kết quả theo giải đang chơi (vé vàng / bạc / đồng). */
+  /** Màu 3 ô “Kết quả” theo hạng giải đang chơi. */
   resultTier?: ResultTier;
   boardSlotRefs?: React.MutableRefObject<(HTMLDivElement | null)[]> | null;
   onBoardStateChange?:
@@ -99,6 +100,7 @@ export default function SlotMachine({
   const boardRefs = externalBoardSlotRefs ?? internalBoardRefs;
   const showInlineBoard = !externalBoardSlotRefs;
   const safeMaxSpinDigit = Math.max(0, Math.min(9, maxSpinDigit));
+  const reelMaxDigit = roundIndex === 0 ? safeMaxSpinDigit : 9;
   const spinDoneRef = useRef(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const resultsRef = useRef(results);
@@ -323,8 +325,8 @@ export default function SlotMachine({
       setIdleDigit(0);
       setResults([
         Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
-        Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
-        Math.floor(Math.random() * (safeMaxSpinDigit + 1)),
+        Math.floor(Math.random() * 10),
+        Math.floor(Math.random() * 10),
       ]);
       setRoundIndex(0);
       setShowConfetti(false);
@@ -418,7 +420,7 @@ export default function SlotMachine({
         <VerticalReel
           spinKey={spinKey}
           targetValue={results[roundIndex]}
-          maxDigit={safeMaxSpinDigit}
+          maxDigit={reelMaxDigit}
           idleValue={idleDigit}
           spinFromDigit={reelSpinFromDigit}
           mode={reelMode}

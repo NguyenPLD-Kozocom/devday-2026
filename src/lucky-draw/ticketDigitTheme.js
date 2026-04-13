@@ -40,7 +40,11 @@ export const getLuckyDrawDigitSlotClassName = ({ tier, filled }) => {
  * Ô “Kết quả” cạnh máy quay (layout cố định, không dùng SLOT_BASE).
  * @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean, compact?: boolean }} p
  */
-export const getLuckyDrawSideBoardSlotClassName = ({ tier, filled, compact }) => {
+export const getLuckyDrawSideBoardSlotClassName = ({
+  tier,
+  filled,
+  compact,
+}) => {
   const base = compact ? SIDE_BOARD_COMPACT : SIDE_BOARD;
   if (!filled) {
     if (tier === "gold") {
@@ -62,14 +66,10 @@ export const getLuckyDrawSideBoardSlotClassName = ({ tier, filled, compact }) =>
 
 /** @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean }} p */
 export const getLuckyDrawDigitTextStyle = ({ tier, filled }) => {
-  const fontSize = "clamp(38px, 6.8vw + 8px, 76px)";
+  const fontSize = "clamp(52px, 9.2vw + 10px, 98px)";
   if (!filled) {
     const emptyColor =
-      tier === "gold"
-        ? "#fde68a"
-        : tier === "silver"
-          ? "#e2e8f0"
-          : "#fdba74";
+      tier === "gold" ? "#fde68a" : tier === "silver" ? "#e2e8f0" : "#fdba74";
     return {
       fontFamily: "'Oswald', sans-serif",
       fontWeight: 900,
@@ -96,11 +96,7 @@ export const getLuckyDrawDigitTextStyle = ({ tier, filled }) => {
     fontSize,
     lineHeight: 1,
     color:
-      tier === "gold"
-        ? "#FFFACD"
-        : tier === "silver"
-          ? "#FFFFFF"
-          : "#FFE4C4",
+      tier === "gold" ? "#FFFACD" : tier === "silver" ? "#FFFFFF" : "#FFE4C4",
     textShadow:
       tier === "gold" ? goldGlow : tier === "silver" ? silverGlow : bronzeGlow,
   };
@@ -111,15 +107,11 @@ export const getLuckyDrawDigitTextStyle = ({ tier, filled }) => {
  */
 export const getLuckyDrawBoardDigitStyle = ({ tier, filled, compact }) => {
   const fontSize = compact
-    ? "clamp(28px, 5.5vw, 38px)"
+    ? "clamp(34px, 6.8vw, 48px)"
     : "clamp(38px, 3.8vw, 56px)";
   if (!filled) {
     const emptyColor =
-      tier === "gold"
-        ? "#fde047"
-        : tier === "silver"
-          ? "#f1f5f9"
-          : "#fdba74";
+      tier === "gold" ? "#fde047" : tier === "silver" ? "#f1f5f9" : "#fdba74";
     return {
       fontFamily: "'Oswald', sans-serif",
       fontWeight: 900,
@@ -146,11 +138,7 @@ export const getLuckyDrawBoardDigitStyle = ({ tier, filled, compact }) => {
     fontSize,
     lineHeight: 1,
     color:
-      tier === "gold"
-        ? "#FFFACD"
-        : tier === "silver"
-          ? "#FFFFFF"
-          : "#FFE4C4",
+      tier === "gold" ? "#FFFACD" : tier === "silver" ? "#FFFFFF" : "#FFE4C4",
     textShadow:
       tier === "gold" ? goldGlow : tier === "silver" ? silverGlow : bronzeGlow,
   };

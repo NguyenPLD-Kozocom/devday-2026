@@ -7,7 +7,7 @@ import {
   useEffect,
 } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { Settings, X } from "lucide-react";
+import { ArrowRight, Settings, X } from "lucide-react";
 import backgroundImg from "../assets/background.jpg";
 import logoKozocom from "../../assets/logo.png";
 import { getPrizeById, PRIZE_IDS } from "../prizes";
@@ -45,10 +45,16 @@ const PRIZE_TITLE_SVG = {
   [PRIZE_IDS.bronze]: thirdNameSvg,
 };
 
+/** Chiều cao dialog sau scale ≤ tỷ lệ này × viewport (thấp hơn = dialog thấp hơn). */
+/** ~gấp đôi bản 0.56; trần thực tế theo viewport (safe area). */
+const LUCKY_DRAW_RESULT_DIALOG_MAX_HEIGHT_VH = 0.9;
+/** Trần scale (~gấp đôi 1.72), v��n giới hạn để tránh v�� layout. */
+const LUCKY_DRAW_RESULT_MAX_SCALE = 2.88;
+
 export default function PrizeDetailScreen({ prizeId, onBack }) {
-  const { soundEnabled, registerSfxOverlay } = useSoundSettings();
+  const { soundEnabled, registerBackgroundMusicMute } = useSoundSettings();
   const prize = getPrizeById(prizeId);
-  const resultTier = getDigitTier(prize.id);
+  const resultDigitTier = getDigitTier(prize.id);
   const detailImageSize = prize.detailImageSize ?? {
     width: "420px",
     height: "480px",
@@ -104,14 +110,21 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
       const vw = document.documentElement.clientWidth;
       const vh = window.innerHeight;
       const endCx = vw / 2;
-      const targetW = Math.min(vw * 0.94, 540);
+      const targetW = Math.min(vw * 0.94, 580);
       const scaleByWidth = targetW / r.width;
-      const scaleByHeight = (vh * 0.88) / r.height;
-      const finalScale =
-        Math.min(2.45, Math.max(1.46, scaleByWidth, scaleByHeight)) * 0.98;
+      const maxScaledH = vh * LUCKY_DRAW_RESULT_DIALOG_MAX_HEIGHT_VH;
+      const scaleByHeight = maxScaledH / r.height;
+      let finalScale =
+        Math.min(
+          LUCKY_DRAW_RESULT_MAX_SCALE,
+          Math.max(1.46, scaleByWidth, scaleByHeight),
+        ) * 0.98;
+      if (r.height * finalScale > maxScaledH) {
+        finalScale = Math.max(1.46, maxScaledH / r.height);
+      }
       const halfScaledH = (r.height * finalScale) / 2;
-      const edgePad = 28;
-      let endCy = vh * 0.56;
+      const edgePad = 24;
+      let endCy = vh * 0.5;
       endCy = Math.min(endCy, vh - edgePad - halfScaledH);
       endCy = Math.max(endCy, edgePad + halfScaledH);
       setTicketFly({
@@ -139,6 +152,30 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
 
   const showTicketFlying = isTicketComplete && ticketFly;
 
+  useEffect(() => {
+    if (!ticketFly) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevOverscroll = html.style.overscrollBehavior;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehavior = prevOverscroll;
+    };
+  }, [ticketFly]);
+
+  /** Tắt nhạc nền trong suốt màn kết quả (bay vé → land), mọi hạng giải. */
+  useEffect(() => {
+    if (!soundEnabled) return;
+    if (!isTicketComplete || !ticketFly) return;
+    return registerBackgroundMusicMute();
+  }, [soundEnabled, isTicketComplete, ticketFly, registerBackgroundMusicMute]);
+
   const handleTicketFlyAnimationComplete = useCallback(() => {
     if (flyCompleteRef.current) return;
     flyCompleteRef.current = true;
@@ -154,6 +191,11 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
     flyCompleteRef.current = false;
     setSlotMachineKey((k) => k + 1);
   }, []);
+
+  const handleBackToPrizeLobby = useCallback(() => {
+    handleCloseAndResetGame();
+    onBack();
+  }, [handleCloseAndResetGame, onBack]);
 
   const handleSelectMaxSpinDigit = useCallback((nextMaxDigit) => {
     setMaxSpinDigit(nextMaxDigit);
@@ -195,24 +237,14 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
     if (!soundEnabled) return;
     if (wowPlayedForFlyRef.current) return;
     wowPlayedForFlyRef.current = true;
-    const endOverlay = registerSfxOverlay();
     const audio = new Audio(wowSfxUrl);
     audio.volume = 0.88;
-    const handleEnded = () => {
-      endOverlay();
-      audio.removeEventListener("ended", handleEnded);
-    };
-    audio.addEventListener("ended", handleEnded);
-    void audio.play().catch(() => {
-      endOverlay();
-    });
+    void audio.play().catch(() => {});
     return () => {
-      audio.removeEventListener("ended", handleEnded);
       audio.pause();
       audio.currentTime = 0;
-      endOverlay();
     };
-  }, [showTicketFlying, soundEnabled, registerSfxOverlay]);
+  }, [showTicketFlying, soundEnabled]);
 
   return (
     <LayoutGroup id={`ld-result-group-${prize.id}`}>
@@ -249,7 +281,7 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
             <MotionButton
               type="button"
               className="flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-white/35 bg-[#081a4d]/65 text-white shadow-[0_6px_20px_rgba(0,0,0,0.35)] backdrop-blur-sm transition hover:bg-[#0d2670]/75 active:scale-95 md:h-11 md:w-11 md:min-h-[44px] md:min-w-[44px]"
-              aria-label="Mở cài đặt phạm vi số quay"
+              aria-label="Mở cài đặt phạm vi số quay cho chữ số đầu tiên"
               onClick={() =>
                 setShowSpinDigitSettings((currentState) => !currentState)
               }
@@ -260,11 +292,14 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
             {showSpinDigitSettings && (
               <div
                 role="dialog"
-                aria-label="Chọn phạm vi số quay"
-                className="absolute left-0 mt-2 w-[180px] rounded-xl border border-[#66b6ff]/45 bg-[#061741]/95 p-2 text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+                aria-label="Chọn phạm vi số quay cho chữ số đầu tiên"
+                className="absolute left-0 mt-2 w-[200px] rounded-xl border border-[#66b6ff]/45 bg-[#061741]/95 p-2 text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm"
               >
-                <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9fd6ff]">
-                  Spin range
+                <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9fd6ff]">
+                  Ô đầu tiên
+                </p>
+                <p className="px-2 pb-2 text-[10px] leading-snug text-white/65">
+                  Hai ô sau luôn quay 0–9.
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {Array.from({ length: 10 }, (_, idx) => 9 - idx).map(
@@ -330,11 +365,11 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                           {[0, 1, 2].map((i) => {
                             const filled = ticketBoard[i] !== null;
                             const slotClass = getLuckyDrawDigitSlotClassName({
-                              tier: resultTier,
+                              tier: resultDigitTier,
                               filled,
                             });
                             const textStyle = getLuckyDrawDigitTextStyle({
-                              tier: resultTier,
+                              tier: resultDigitTier,
                               filled,
                             });
                             const refCb = (el) => {
@@ -382,28 +417,61 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                   />
-                  <MotionButton
-                    type="button"
-                    className="fixed top-4 right-4 z-[115] flex h-11 min-h-[44px] w-11 min-w-[44px] cursor-pointer items-center justify-center rounded-full border border-white/45 bg-slate-950/55 text-white shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm transition hover:bg-slate-950/70 hover:opacity-95 active:scale-95 md:top-5 md:right-5 md:h-12 md:w-12"
-                    aria-label="Đóng và chơi lại từ đầu"
-                    initial={{ opacity: 0, scale: 0.88 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                  <MotionDiv
+                    className="fixed top-4 right-4 z-[115] flex items-center gap-2 md:top-5 md:right-5"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{
                       delay: flyFinished ? 0.2 : 1.55,
                       duration: 0.4,
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    onClick={handleCloseAndResetGame}
-                    onKeyDown={(e) =>
-                      handleEnterKey(e, handleCloseAndResetGame)
-                    }
                   >
-                    <X
-                      className="h-5 w-5 md:h-[22px] md:w-[22px]"
-                      strokeWidth={2.25}
-                      aria-hidden
-                    />
-                  </MotionButton>
+                    <MotionButton
+                      type="button"
+                      className="flex h-11 min-h-[44px] w-11 min-w-[44px] cursor-pointer items-center justify-center rounded-full border border-white/45 bg-slate-950/55 text-white shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm transition hover:bg-slate-950/70 hover:opacity-95 active:scale-95 md:h-12 md:w-12"
+                      aria-label="Về sảnh chọn ba giải thưởng"
+                      initial={{ opacity: 0, scale: 0.88 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: flyFinished ? 0.2 : 1.55,
+                        duration: 0.4,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      onClick={handleBackToPrizeLobby}
+                      onKeyDown={(e) =>
+                        handleEnterKey(e, handleBackToPrizeLobby)
+                      }
+                    >
+                      <ArrowRight
+                        className="h-5 w-5 md:h-[22px] md:w-[22px]"
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                    </MotionButton>
+                    <MotionButton
+                      type="button"
+                      className="flex h-11 min-h-[44px] w-11 min-w-[44px] cursor-pointer items-center justify-center rounded-full border border-white/45 bg-slate-950/55 text-white shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm transition hover:bg-slate-950/70 hover:opacity-95 active:scale-95 md:h-12 md:w-12"
+                      aria-label="Đóng và chơi lại từ đầu"
+                      initial={{ opacity: 0, scale: 0.88 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: flyFinished ? 0.2 : 1.55,
+                        duration: 0.4,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      onClick={handleCloseAndResetGame}
+                      onKeyDown={(e) =>
+                        handleEnterKey(e, handleCloseAndResetGame)
+                      }
+                    >
+                      <X
+                        className="h-5 w-5 md:h-[22px] md:w-[22px]"
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                    </MotionButton>
+                  </MotionDiv>
                   {flyFinished && ticketFly && (
                     <LuckyDrawResultEffects prizeId={prize.id} />
                   )}
@@ -414,7 +482,7 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                       aria-labelledby={
                         flyFinished ? "lucky-draw-result-label" : undefined
                       }
-                      className="fixed z-[110] pointer-events-auto [isolation:isolate]"
+                      className={`fixed z-[110] pointer-events-auto [isolation:isolate] ${prize.id === PRIZE_IDS.bronze ? "overflow-visible" : "overflow-hidden"}`}
                       style={{
                         left: 0,
                         top: 0,
@@ -454,11 +522,16 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                             "0 0 56px 28px rgba(255,230,170,0.28), 0 0 88px 44px rgba(100,185,255,0.14)",
                         }}
                       />
-                      <div className="relative top-[100px] z-10 flex min-h-0 w-full flex-col">
+                      <div className="relative z-10 mt-6 flex w-full flex-col md:mt-8">
                         <div
-                          className={`flex h-full min-h-0 w-full flex-col overflow-hidden ${luckyDrawLandedCardShellClass(prize.id)}`}
+                          className={`flex w-full shrink-0 flex-col ${prize.id === PRIZE_IDS.bronze ? "overflow-visible" : "overflow-hidden"} ${luckyDrawLandedCardShellClass(prize.id)}`}
                         >
-                          <TicketWhiteSurface className="flex min-h-0 w-full flex-1 flex-col items-center gap-3 overflow-y-auto rounded-[22px] px-2 py-3 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_12px_rgba(15,23,42,0.04)] md:gap-4 md:rounded-[26px] md:px-3 md:py-4">
+                          <TicketWhiteSurface
+                            overflow={
+                              prize.id === PRIZE_IDS.bronze ? "visible" : "hidden"
+                            }
+                            className="flex w-full flex-col items-center gap-3 rounded-[22px] px-2 py-3 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_12px_rgba(15,23,42,0.04)] md:gap-4 md:rounded-[26px] md:px-3 md:py-4"
+                          >
                             <LuckyDrawExpandedTicketContent
                               prizeId={prize.id}
                               digits={ticketBoard}
@@ -503,7 +576,7 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                   key={slotMachineKey}
                   compact
                   maxSpinDigit={maxSpinDigit}
-                  resultTier={resultTier}
+                  resultTier={resultDigitTier}
                   boardSlotRefs={ticketSlotRefs}
                   onBoardStateChange={handleBoardStateChange}
                 />

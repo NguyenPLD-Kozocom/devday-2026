@@ -20,10 +20,12 @@ const BACKGROUND_MUSIC_VOLUME_DUCKED = 0.1;
 export type SoundSettingsValue = {
   soundEnabled: boolean;
   toggleSound: () => void;
-  /** Số nguồn SFX đang “đè” nhạc nền (spin, wow, …). >0 → nhạc nền duck. */
+  /** Số nguồn SFX đang “đè” nhạc nền (spin, …). >0 → nhạc nền duck. */
   sfxOverlayCount: number;
   /** Tăng overlay; gọi hàm trả về khi SFX kết thúc (gọi nhiều lần an toàn). */
   registerSfxOverlay: () => () => void;
+  /** Tắt hẳn nhạc nền (pause) trong lúc active; dùng khi phát nhạc/SFX kết quả. */
+  registerBackgroundMusicMute: () => () => void;
 };
 
 const SoundSettingsContext = createContext<SoundSettingsValue | null>(null);
@@ -40,6 +42,7 @@ export const SoundSettingsProvider = ({
   });
 
   const [sfxOverlayCount, setSfxOverlayCount] = useState(0);
+  const [bgmMutedCount, setBgmMutedCount] = useState(0);
 
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
@@ -56,6 +59,16 @@ export const SoundSettingsProvider = ({
       if (released) return;
       released = true;
       setSfxOverlayCount((n) => Math.max(0, n - 1));
+    };
+  }, []);
+
+  const registerBackgroundMusicMute = useCallback(() => {
+    setBgmMutedCount((n) => n + 1);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      setBgmMutedCount((n) => Math.max(0, n - 1));
     };
   }, []);
 
@@ -80,13 +93,18 @@ export const SoundSettingsProvider = ({
       audio.volume = 0;
       return;
     }
+    if (bgmMutedCount > 0) {
+      audio.pause();
+      audio.volume = 0;
+      return;
+    }
     const vol =
       sfxOverlayCount > 0
         ? BACKGROUND_MUSIC_VOLUME_DUCKED
         : BACKGROUND_MUSIC_VOLUME;
     audio.volume = vol;
     void audio.play().catch(() => {});
-  }, [soundEnabled, sfxOverlayCount]);
+  }, [soundEnabled, sfxOverlayCount, bgmMutedCount]);
 
   const value = useMemo(
     () => ({
@@ -94,8 +112,15 @@ export const SoundSettingsProvider = ({
       toggleSound,
       sfxOverlayCount,
       registerSfxOverlay,
+      registerBackgroundMusicMute,
     }),
-    [soundEnabled, toggleSound, sfxOverlayCount, registerSfxOverlay],
+    [
+      soundEnabled,
+      toggleSound,
+      sfxOverlayCount,
+      registerSfxOverlay,
+      registerBackgroundMusicMute,
+    ],
   );
 
   return (
