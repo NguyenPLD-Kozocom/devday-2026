@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./lucky-draw/celebration-animations.css";
 
 /* ── Tech font (ten-seconds app) ── */
 @font-face {

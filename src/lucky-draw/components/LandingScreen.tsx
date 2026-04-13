@@ -41,7 +41,7 @@ const SCREENS = [
       title: "HÌNH THỨC QUAY THƯỞNG:",
       items: [
         "Ban tổ chức sẽ tiến hành quay số để tìm ra người thắng cuộc lần lượt cho 3 hạng mục: Giải Ba, Giải Nhì và Giải Nhất.",
-        "Mỗi giải sẽ được xác định bằng cách quay 3 lần để chọn ra từng chữ số từ trái sang phải.",
+        "Mỗi dãy số trúng thưởng gồm 3 chữ số, được quay ngẫu nhiên, lần lượt từ trái sang phải.",
       ],
     },
     right: {
@@ -134,10 +134,10 @@ export default function LandingScreen({ onNext }) {
         <SoundToggleButton />
       </motion.div>
 
-      {/* ── Title Logo — 110px from top ── */}
+      {/* ── Title Logo — compact top so cards (~60vh) fit one screen ── */}
       <motion.div
-        className="shrink-0 z-10"
-        style={{ marginTop: "110px" }}
+        className="shrink-0 z-10 px-4"
+        style={{ marginTop: "clamp(4.5rem, 9vh, 6.875rem)" }}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -145,24 +145,25 @@ export default function LandingScreen({ onNext }) {
         <img
           src={logoGame}
           alt="Lottery Game"
-          className="w-[480px] md:w-[620px] lg:w-[720px] object-contain"
+          className="w-[min(92vw,720px)] max-h-[min(11vh,120px)] md:max-h-[min(13vh,140px)] object-contain mx-auto"
         />
       </motion.div>
 
-      {/* ── Info Cards ── */}
-      <div
-        className="flex-1 flex items-center justify-center w-full z-10"
-        style={{ paddingLeft: "140px", paddingRight: "140px" }}
-      >
+      {/* ── Info Cards — two-column ~50vh; single “Quy định chung” compact + centered ── */}
+      <div className="flex-1 min-h-0 flex items-center justify-center w-full z-10 px-6 md:px-10 lg:px-16 xl:px-24">
         <AnimatePresence mode="wait">
           <motion.div
             key={page}
             className={
               screen.layout === "single"
-                ? "flex justify-center w-full"
+                ? "flex flex-col justify-center items-center w-full h-full min-h-0"
                 : "flex flex-col md:flex-row w-full"
             }
-            style={screen.layout === "single" ? {} : { gap: "60px" }}
+            style={
+              screen.layout === "single"
+                ? {}
+                : { gap: "clamp(1rem, 3vw, 3.75rem)" }
+            }
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
@@ -172,12 +173,12 @@ export default function LandingScreen({ onNext }) {
               <>
                 <InfoCard title={screen.left.title}>
                   <ul
-                    className="list-disc pl-6 space-y-3 text-[20px] leading-relaxed"
+                    className="list-disc pl-5 md:pl-6 space-y-2 md:space-y-3 text-[clamp(15px,1.35vw,20px)] leading-snug md:leading-relaxed"
                     style={{ listStyleType: "disc" }}
                   >
                     {screen.left.items.map((text, i) => (
                       <li key={i} style={{ color: "#00CCFF" }}>
-                        <span className="text-white">{text}</span>
+                        <span className="text-white text-[28px]">{text}</span>
                       </li>
                     ))}
                   </ul>
@@ -185,24 +186,21 @@ export default function LandingScreen({ onNext }) {
 
                 <InfoCard title={screen.right.title}>
                   <ul
-                    className="list-disc pl-6 space-y-3 text-[20px] leading-relaxed"
+                    className="list-disc pl-5 md:pl-6 space-y-2 md:space-y-3 text-[clamp(15px,1.35vw,20px)] leading-snug md:leading-relaxed"
                     style={{ listStyleType: "disc" }}
                   >
                     {screen.right.items.map((text, i) => (
                       <li key={i} style={{ color: "#00CCFF" }}>
-                        <span className="text-white">{text}</span>
+                        <span className="text-white text-[28px]">{text}</span>
                       </li>
                     ))}
                   </ul>
                 </InfoCard>
               </>
             ) : (
-              <div
-                className="flex flex-col items-center"
-                style={{ maxWidth: "600px" }}
-              >
-                <InfoCard title={screen.center.title} centerTitle>
-                  <p className="text-white text-[20px] leading-relaxed text-center">
+              <div className="flex flex-col items-center justify-center w-full shrink-0">
+                <InfoCard title={screen.center.title} centerTitle singleCard>
+                  <p className="text-white text-[40px] leading-relaxed text-center px-1">
                     {screen.center.text}
                   </p>
                 </InfoCard>
@@ -212,10 +210,9 @@ export default function LandingScreen({ onNext }) {
         </AnimatePresence>
       </div>
 
-      {/* ── Navigation / Play Now ── */}
+      {/* ── Navigation / Play Now — last screen: ~30px from viewport bottom ── */}
       <div
-        className="flex items-center justify-center gap-6 z-10"
-        style={{ marginTop: "50px", paddingBottom: "30px" }}
+        className={`shrink-0 flex items-center justify-center gap-6 z-10 pt-2 ${isLast ? "pb-[100px]" : "pb-4 md:pb-6"}`}
       >
         {isLast ? (
           /* PLAY NOW button on the last screen */
@@ -227,8 +224,7 @@ export default function LandingScreen({ onNext }) {
             <img
               src={playNow}
               alt="Play Now"
-              style={{ height: "70px" }}
-              className="object-contain"
+              className="object-contain h-14 md:h-[6.375rem]"
             />
           </button>
         ) : (
@@ -269,19 +265,42 @@ export default function LandingScreen({ onNext }) {
 /**
  * InfoCard — A card with a gradient border, semi-transparent blue background.
  */
-function InfoCard({ title, children, centerTitle = false }) {
+function InfoCard({
+  title,
+  children,
+  centerTitle = false,
+  singleCard = false,
+}) {
+  const outerClass = singleCard
+    ? "flex-none w-full max-w-[min(52rem,92vw)] mx-auto rounded-xl"
+    : "flex-1 min-w-0 w-full max-w-full rounded-xl";
+
+  const innerClass = singleCard
+    ? "flex flex-col justify-center items-center rounded-[calc(0.75rem-4.19px)] w-full h-auto min-h-0 overflow-visible"
+    : "flex flex-col justify-start items-center rounded-[calc(0.75rem-4.19px)] w-full h-[30vh] min-h-[180px] max-h-[30vh] md:h-[50vh] md:min-h-[200px] md:max-h-[50vh] overflow-y-auto overscroll-contain";
+
+  const innerPadding = singleCard
+    ? "clamp(0.875rem, 2vw, 1.5rem)"
+    : "clamp(1.25rem, 2.5vw, 2.5rem)";
+
+  const titleSize = singleCard
+    ? "clamp(2rem, 2.2vw, 3rem)"
+    : "clamp(1.25rem, 2.8vw, 2.25rem)";
+
+  const titleMb = singleCard ? "mb-2 md:mb-3" : "mb-3 md:mb-4";
+
   return (
     <div
-      className="flex-1 rounded-xl"
+      className={outerClass}
       style={{
         padding: "4px",
         background: "linear-gradient(180deg, #35A3EF 0%, #0039BB 100%)",
       }}
     >
       <div
-        className="rounded-[calc(0.75rem-4.19px)] h-full"
+        className={innerClass}
         style={{
-          padding: "40px",
+          padding: innerPadding,
           background: "rgba(1, 41, 161, 0.7)",
           backdropFilter: "blur(8px)",
           borderImageSource:
@@ -290,12 +309,15 @@ function InfoCard({ title, children, centerTitle = false }) {
         }}
       >
         <h3
-          className={`mb-4 tracking-wide text-white ${centerTitle ? "text-center" : ""}`}
-          style={{ fontSize: "34px", fontWeight: 700 }}
+          className={`${titleMb} tracking-wide text-white text-center shrink-0 ${centerTitle ? "text-center" : ""}`}
+          style={{
+            fontSize: titleSize,
+            fontWeight: 700,
+          }}
         >
           {title}
         </h3>
-        {children}
+        <div className="w-full min-h-0">{children}</div>
       </div>
     </div>
   );
