@@ -725,17 +725,18 @@ function App() {
         }}
       >
         <div
-          className="h-full w-full rounded-tl-[37px] rounded-tr-[37px] flex flex-col items-center justify-center pt-[min(24px,2.2vh)]"
+          className="h-full w-full rounded-tl-[37px] rounded-tr-[37px] flex flex-col items-center justify-center"
           style={{ background: "#0129A1CC" }}
         >
-          <p className="text-white text-[min(1.875rem,1.5625vw)] font-main text-center mb-[clamp(10px,1.85vh,10px)]">
+          {/* <p className="text-white text-[min(1.875rem,1.5625vw)] font-main text-center">
             {gameState === "idle"
               ? "Hoặc nhấn ENTER để bắt đầu"
               : "Hoặc nhấn ENTER để dừng"}
-          </p>
+          </p> */}
           <div className="flex items-center justify-center gap-[min(60px,3.125vw)]">
             <GiftGroup
               imageSrc={gift1Img}
+              className="pt-[100px]"
               imageClassName="w-[min(217px,11.3vw)] h-[min(135px,12.5vh)]"
               label="Gấu/Quạt lụa"
               description="9.99 - 10.01"
@@ -744,12 +745,13 @@ function App() {
               imageSrc={gift2Img}
               variant="jackpot"
               className="gap-4"
-              imageClassName="w-[min(383px,19.95vw)] h-[min(180px,16.67vh)]"
+              imageClassName="w-[min(383px,19.95vw)] h-[250px]"
               label="Áo thun + Gấu + Ly giữ nhiệt"
               description="10.00"
             />
             <GiftGroup
               imageSrc={gift3Img}
+              className="pt-[100px]"
               imageClassName="w-[min(195px,10.16vw)] h-[min(135px,12.5vh)]"
               label="Bút + Kẹo mút"
               description="Còn lại"
