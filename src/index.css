@@ -108,6 +108,11 @@ body,
   align-items: center;
   justify-content: center;
   position: relative;
+  /* filter removed here, moved to .hex-shadow-wrapper */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.hex-shadow-wrapper {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
 }
 

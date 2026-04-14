@@ -1,10 +1,16 @@
 import bgMusicSrc from "../assets/background-music.mp3";
 import boomSoundSrc from "../assets/boom-sound.mp3";
+import winSoundSrc from "../assets/win-sound.mp3";
+import gameOverSoundSrc from "../assets/gameover-sound.mp3";
+import giftSoundSrc from "../assets/gift-sound.mp3";
 
 class AudioController {
   private _isMuted = false;
   private bgMusic: HTMLAudioElement | null = null;
   private boomSound: HTMLAudioElement | null = null;
+  private winSound: HTMLAudioElement | null = null;
+  private gameOverSound: HTMLAudioElement | null = null;
+  private giftSound: HTMLAudioElement | null = null;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -14,6 +20,16 @@ class AudioController {
 
       this.boomSound = new Audio(boomSoundSrc);
       this.boomSound.volume = 0.8;
+
+      this.winSound = new Audio(winSoundSrc);
+      this.winSound.loop = false;
+      this.winSound.volume = 0.8;
+
+      this.gameOverSound = new Audio(gameOverSoundSrc);
+      this.gameOverSound.volume = 0.8;
+
+      this.giftSound = new Audio(giftSoundSrc);
+      this.giftSound.volume = 0.8;
 
       // Global interaction listener to start music as early as possible
       const startOnInteraction = () => {
@@ -42,6 +58,15 @@ class AudioController {
     }
     if (this.boomSound) {
       this.boomSound.muted = muted;
+    }
+    if (this.winSound) {
+      this.winSound.muted = muted;
+    }
+    if (this.gameOverSound) {
+      this.gameOverSound.muted = muted;
+    }
+    if (this.giftSound) {
+      this.giftSound.muted = muted;
     }
   }
 
@@ -88,6 +113,20 @@ class AudioController {
     }
   }
 
+  playGameOver() {
+    if (this.gameOverSound) {
+      this.gameOverSound.currentTime = 0;
+      this.gameOverSound.play().catch(e => console.error("Game over sound play failed", e));
+    }
+  }
+
+  playClaimGift() {
+    if (this.giftSound) {
+      this.giftSound.currentTime = 0;
+      this.giftSound.play().catch(e => console.error("Gift sound play failed", e));
+    }
+  }
+
   playWin() {
     const notes = [440, 554, 659, 880];
     notes.forEach((freq, i) => {
@@ -106,6 +145,22 @@ class AudioController {
       this.bgMusic.pause();
       this.bgMusic.currentTime = 0;
     }
+  }
+
+  playVictoryMusic() {
+    this.stopBgMusic();
+    if (this.winSound) {
+      this.winSound.currentTime = 0;
+      this.winSound.play().catch(e => console.error("Victory music play failed", e));
+    }
+  }
+
+  stopVictoryMusic() {
+    if (this.winSound) {
+      this.winSound.pause();
+      this.winSound.currentTime = 0;
+    }
+    this.playBgMusic();
   }
 }
 
