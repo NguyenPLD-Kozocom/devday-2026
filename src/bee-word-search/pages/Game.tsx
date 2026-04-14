@@ -10,6 +10,7 @@ import {
   GiftWinModal,
 } from "../components/Modals";
 import { RulesModal } from "../components/RulesModal";
+import { MergeAnimation } from "../components/MergeAnimation";
 import { audio } from "../utils/audio";
 import type { CellData, TileData } from "../types/game";
 import buttonHelp from "../assets/button_help.png";
@@ -19,13 +20,17 @@ import buttonSoundOn from "../assets/button_sound_on.png";
 const MAX_TURNS = 4;
 
 function generateInitialCells(): CellData[] {
+  const showKozocom = Math.random() < 0.5;
   const contents = [
-    { type: "letter", content: "Kozocom" },
-    ...Array(8).fill({ type: "letter", content: "Ko" }),
-    ...Array(8).fill({ type: "letter", content: "Com" }),
-    ...Array(4).fill({ type: "letter", content: "Zo" }),
-    ...Array(4).fill({ type: "gift", content: "🎁" }),
-    ...Array(4).fill({ type: "boom", content: "💣" }),
+    { type: "letter", content: showKozocom ? "Kozocom" : "Com" },
+    ...Array(10).fill({ type: "letter", content: "Ko" }),
+    ...Array(6).fill({ type: "letter", content: "Com" }),
+    ...Array(2).fill({ type: "letter", content: "Zo" }),
+    { type: "gift", content: "gift-1" },
+    { type: "gift", content: "gift-2" },
+    { type: "gift", content: "gift-3" },
+    { type: "gift", content: "gift-4" },
+    ...Array(6).fill({ type: "boom", content: "💣" }),
   ];
 
   const shuffled = [...contents].sort(() => Math.random() - 0.5);
@@ -72,6 +77,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
   const [winType, setWinType] = useState<"word" | "gift" | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
 
   const hasWonRef = useRef(false);
 
@@ -86,6 +92,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
     setWinningTiles([]);
     setWinType(null);
     setIsBusy(false);
+    setIsMerging(false);
     hasWonRef.current = false;
   }, []);
 
@@ -122,8 +129,12 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           setWinningTiles(parts);
         }
         setWinType("word");
-        setGameStatus("won");
-        audio.playWin();
+        if (hasKozocom) {
+          setGameStatus("won");
+          audio.playWin();
+        } else {
+          setIsMerging(true);
+        }
         hasWonRef.current = true;
       }
     }
@@ -175,6 +186,11 @@ export function Game({ isMuted, toggleMute }: GameProps) {
             setTimeout(() => {
               setActiveGiftTile(newTile);
               audio.playGift();
+              if (isLastTurn) {
+                setWinType("gift");
+                setGameStatus("won");
+                audio.playClaimGift();
+              }
             }, 400);
           } else {
             if (isLastTurn) {
@@ -200,6 +216,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
                   setGameStatus((status) =>
                     status === "playing" ? "lost" : status,
                   );
+                  audio.playGameOver();
                 }, 400);
               }
             } else if (cell.content === "Kozocom") {
@@ -228,7 +245,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
   const handleClaimGift = () => {
     setWinType("gift");
     setGameStatus("won");
-    audio.playWin();
+    audio.playClaimGift();
     setActiveGiftTile(null);
   };
 
@@ -247,6 +264,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
             setGameStatus((prevStatus) =>
               prevStatus === "playing" ? "lost" : prevStatus,
             );
+            audio.playGameOver();
           }, 300);
         }
         return newTiles;
@@ -258,7 +276,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
     <Layout shake={shake}>
       <Header />
 
-      <div className="w-full flex-1 flex flex-col items-center justify-center relative z-20 overflow-hidden -translate-y-[68px]">
+      <div className="w-full flex-1 flex flex-col items-center justify-center relative z-20 -translate-y-[68px]">
         <HexagonGrid
           cells={cells}
           collectedTiles={collectedTiles}
@@ -326,9 +344,20 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       <GiftWinModal
         isOpen={gameStatus === "won" && winType === "gift"}
         onRestart={initGame}
+        giftContent={collectedTiles.find(t => t.type === "gift" && !t.isDisabled)?.content}
       />
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+
+      {isMerging && (
+        <MergeAnimation
+          onComplete={() => {
+            setIsMerging(false);
+            setGameStatus("won");
+            audio.playWin();
+          }}
+        />
+      )}
     </Layout>
   );
 }

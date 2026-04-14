@@ -39,7 +39,7 @@ export function HexagonGrid({
             }}
           >
             {colCells.map((cell) => (
-              <div key={cell.id}>
+              <div key={cell.id} className="hex-shadow-wrapper">
                 <HexagonSlot
                   data={cell}
                   onClick={onCellClick}
