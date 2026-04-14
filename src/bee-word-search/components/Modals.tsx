@@ -1,24 +1,25 @@
-import { Fragment } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
 import buttonDefault from "../assets/button-default.svg";
 import buttonDanger from "../assets/button-danger.svg";
 import giftModal from "../assets/gift-modal.svg";
 import boomModal from "../assets/boom-modal.svg";
-import giftSpecial from "../assets/gift-spectial.svg";
 import giftUnboxModal from "../assets/gift-unbox-modal.svg";
 
 import { audio } from "../utils/audio";
+import kozocomVideo from "../assets/kozocom.webm";
 
 interface BaseModalProps {
   isOpen: boolean;
   type?: "info" | "error";
-  icon: string;
+  icon: string | React.ReactNode;
   title: string;
   titleClassName?: string;
   imgClassName?: string;
   children: React.ReactNode;
   isLarge?: boolean;
+  isContentHidden?: boolean;
 }
 
 function Modal({
@@ -30,6 +31,7 @@ function Modal({
   imgClassName,
   children,
   isLarge,
+  isContentHidden,
 }: BaseModalProps) {
   return (
     <AnimatePresence>
@@ -37,9 +39,10 @@ function Modal({
         <Fragment>
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isContentHidden ? 0 : 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#5E4400] z-100 opacity-65!"
+            className="fixed inset-0 bg-[#5E4400] z-100 transition-opacity duration-500"
+            style={{ opacity: isContentHidden ? 0 : 0.65 }}
           />
           <div className="fixed inset-0 flex items-center justify-center z-101 pointer-events-none p-4">
             <motion.div
@@ -47,32 +50,50 @@ function Modal({
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className={cn(
-                "px-[80px] flex items-center justify-between flex-col py-[60px] w-[930px] pointer-events-auto text-center relative text-white shadow-2xl",
-                isLarge ? "h-[792px]" : "h-[752px]"
+                "px-[80px] flex items-center justify-between flex-col py-[60px] w-[930px] pointer-events-auto text-center relative text-white",
+                isLarge ? "h-[792px]" : "h-[752px]",
               )}
-              style={{
-                border: "8px solid transparent",
-                borderRadius: "40px",
-                background:
-                  type === "error"
-                    ? "linear-gradient(#FFD9DA, #FFD9DA) padding-box, linear-gradient(180deg, #D51F02 0%, #9D1701 100%) border-box"
-                    : "linear-gradient(#FFE6A9, #FFE6A9) padding-box, linear-gradient(180deg, #E2B137 0%, #B26510 100%) border-box",
-              }}
             >
-              <img
-                src={icon}
-                alt=""
-                className={cn("mb-[40px]", imgClassName)}
+              {/* Background layer */}
+              <motion.div
+                initial={false}
+                animate={{ opacity: isContentHidden ? 0 : 1 }}
+                className="absolute inset-0 shadow-2xl z-[-1]"
+                style={{
+                  border: "8px solid transparent",
+                  borderRadius: "40px",
+                  background:
+                    type === "error"
+                      ? "linear-gradient(#FFD9DA, #FFD9DA) padding-box, linear-gradient(180deg, #D51F02 0%, #9D1701 100%) border-box"
+                      : "linear-gradient(#FFE6A9, #FFE6A9) padding-box, linear-gradient(180deg, #E2B137 0%, #B26510 100%) border-box",
+                  pointerEvents: isContentHidden ? "none" : "auto",
+                }}
               />
-              <h2
-                className={cn(
-                  "font-main text-[38px] font-medium mb-1 tracking-wider text-[#623C00] leading-none",
-                  titleClassName,
-                )}
+              
+              {typeof icon === "string" ? (
+                <img
+                  src={icon}
+                  alt=""
+                  className={cn("mb-[40px]", imgClassName)}
+                />
+              ) : (
+                <div className={cn("mb-[40px]", imgClassName)}>{icon}</div>
+              )}
+              <motion.div
+                initial={false}
+                animate={{ opacity: isContentHidden ? 0 : 1 }}
+                className="flex flex-col items-center flex-1 w-full h-full justify-between"
               >
-                {title}
-              </h2>
-              {children}
+                <h2
+                  className={cn(
+                    "font-main text-[38px] font-medium mb-1 tracking-wider text-[#623C00] leading-none",
+                    titleClassName,
+                  )}
+                >
+                  {title}
+                </h2>
+                {children}
+              </motion.div>
             </motion.div>
           </div>
         </Fragment>
@@ -101,17 +122,15 @@ export function GiftModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      icon={giftModal}
-      title={""}
-      isLarge={true}
-    >
+    <Modal isOpen={isOpen} icon={giftModal} title={""} isLarge={true}>
       <p className="text-[38px] mb-2 text-[#623C00] font-medium leading-[1.2] mt-2">
-        <strong>Chúc mừng!</strong> Bạn có thể chọn <strong>Chốt quà!</strong> để nhận quà ngay, hoặc <strong>Tiếp tục chơi</strong> để săn giải thưởng lớn hơn.
+        <strong>Chúc mừng!</strong> Bạn có thể chọn <strong>Chốt quà!</strong>{" "}
+        để nhận quà ngay, hoặc <strong>Tiếp tục chơi</strong> để săn giải thưởng
+        lớn hơn.
       </p>
       <p className="text-[38px] mb-8 text-[#623C00] font-medium leading-[1.2]">
-        <strong>Cẩn thận nhé:</strong> Nếu trúng bom, toàn bộ quà trước đó sẽ bị hủy đấy!
+        <strong>Cẩn thận nhé:</strong> Nếu trúng bom, toàn bộ quà trước đó sẽ bị
+        hủy đấy!
       </p>
       <div className="flex items-center justify-center flex-row gap-[50px]">
         <button
@@ -199,6 +218,30 @@ export function WinModal({
   winningTiles?: { content: string }[] | null;
 }) {
   const isSpecial = winningTiles?.some((t) => t.content === "Kozocom");
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isContentHidden, setIsContentHidden] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVideoPlaying(false);
+      setIsContentHidden(false);
+
+      const playTimer = setTimeout(() => {
+        setIsVideoPlaying(true);
+        videoRef.current?.play();
+      }, 2000);
+
+      const hideTimer = setTimeout(() => {
+        setIsContentHidden(true);
+      }, 4000);
+
+      return () => {
+        clearTimeout(playTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [isOpen]);
 
   const handleRestart = () => {
     audio.playClick();
@@ -208,7 +251,18 @@ export function WinModal({
   return (
     <Modal
       isOpen={isOpen}
-      icon={giftSpecial}
+      isContentHidden={isContentHidden}
+      icon={
+        <video
+          ref={videoRef}
+          src={kozocomVideo}
+          loop
+          muted
+          playsInline
+          className="w-screen scale-150 z-100 aspect-square object-contain"
+          style={{ visibility: isVideoPlaying ? "visible" : "hidden" }}
+        />
+      }
       title={isSpecial ? "Đỉnh của chóp!" : "Chúc mừng! Bạn đã hoàn thành."}
       titleClassName="font-bold mt-[320px]"
       imgClassName="absolute -top-[68px]"
