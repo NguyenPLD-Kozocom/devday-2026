@@ -725,7 +725,7 @@ function App() {
         }}
       >
         <div
-          className="h-full w-full rounded-tl-[37px] rounded-tr-[37px] flex flex-col items-center justify-center"
+          className="h-full w-full rounded-tl-[37px] rounded-tr-[37px] flex flex-col items-center justify-center pt-10"
           style={{ background: "#0129A1CC" }}
         >
           {/* <p className="text-white text-[min(1.875rem,1.5625vw)] font-main text-center">
@@ -737,7 +737,7 @@ function App() {
             <GiftGroup
               imageSrc={gift1Img}
               className="pt-[100px]"
-              imageClassName="w-[min(217px,11.3vw)] h-[min(135px,12.5vh)]"
+              imageClassName="w-[400px] h-[150px]"
               label="Gấu/Quạt lụa"
               description="9.99 - 10.01"
             />
@@ -752,7 +752,7 @@ function App() {
             <GiftGroup
               imageSrc={gift3Img}
               className="pt-[100px]"
-              imageClassName="w-[min(195px,10.16vw)] h-[min(135px,12.5vh)]"
+              imageClassName="w-[400px] h-[150px]"
               label="Bút + Kẹo mút"
               description="Còn lại"
             />
