@@ -23,14 +23,14 @@ function generateInitialCells(): CellData[] {
   const showKozocom = Math.random() < 0.5;
   const contents = [
     { type: "letter", content: showKozocom ? "Kozocom" : "Com" },
-    ...Array(10).fill({ type: "letter", content: "Ko" }),
-    ...Array(6).fill({ type: "letter", content: "Com" }),
-    ...Array(2).fill({ type: "letter", content: "Zo" }),
+    ...Array(9).fill({ type: "letter", content: "Ko" }),
+    ...Array(7).fill({ type: "letter", content: "Com" }),
+    ...Array(3).fill({ type: "letter", content: "Zo" }),
     { type: "gift", content: "gift-1" },
     { type: "gift", content: "gift-2" },
     { type: "gift", content: "gift-3" },
     { type: "gift", content: "gift-4" },
-    ...Array(6).fill({ type: "boom", content: "💣" }),
+    ...Array(5).fill({ type: "boom", content: "💣" }),
   ];
 
   const shuffled = [...contents].sort(() => Math.random() - 0.5);
