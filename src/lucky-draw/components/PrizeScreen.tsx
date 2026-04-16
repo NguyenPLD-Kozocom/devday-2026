@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from "react";
 import { useEffect, useRef } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
-import logoGame from "../assets/logo-game.png";
+import logoGame from "../assets/logo.svg";
 // Assets
 import backgroundImg from "../assets/background.jpg";
 import logoKozocom from "../../assets/logo.png";
@@ -155,6 +155,7 @@ export default function PrizeScreen({
           />
         </MotionButton>
       )}
+      <SoundToggleButton className="absolute top-4 left-20 z-20 w-10 h-10 md:w-12 md:h-12 cursor-pointer hover:scale-110 active:scale-95 transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-full" />
 
       {/* ── Header: Logo + Speaker ── */}
       <motion.div
@@ -168,7 +169,6 @@ export default function PrizeScreen({
           alt="KOZOCOM"
           className="h-6 md:h-8 object-contain"
         />
-        <SoundToggleButton className="active:scale-95" />
       </motion.div>
 
       {/* ── Title Logo ── */}

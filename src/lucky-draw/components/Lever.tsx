@@ -75,13 +75,13 @@ export default function Lever({ onPull, disabled }) {
             alt="Spin handle"
             draggable={false}
             className={`pointer-events-none select-none ${
-              disabled ? "opacity-75 saturate-50" : ""
+              disabled ? "saturate-50" : ""
             }`}
             style={{
               width: `${HANDLE_WIDTH}px`,
               height: `${HANDLE_HEIGHT}px`,
               filter: disabled
-                ? "none"
+                ? "drop-shadow(0 6px 14px rgba(0, 90, 255, 0.35))"
                 : "drop-shadow(0 6px 14px rgba(0, 90, 255, 0.35))",
             }}
           />
