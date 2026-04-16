@@ -13,7 +13,6 @@ import spinSfx2Url from "../assets/spin-2.mp4";
 import spinSfx3Url from "../assets/spin-3.mp3";
 import tadaSfxUrl from "../assets/tada.mp3";
 import { useSfxOverlayWhile, useSoundSettings } from "../SoundSettingsContext";
-import logoGame from "../assets/logo-game.png";
 import {
   getLuckyDrawBoardDigitStyle,
   getLuckyDrawSideBoardSlotClassName,
@@ -444,11 +443,6 @@ export default function SlotMachine({
           onPull={handlePull}
           pullDisabled={phase !== "idle"}
           onSpinComplete={handleSpinComplete}
-        />
-        <img
-          src={logoGame}
-          alt="Lottery Game"
-          className="absolute top-9/12 left-[30px] h-[200px] object-contain"
         />
       </div>
 

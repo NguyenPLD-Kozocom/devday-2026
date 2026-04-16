@@ -99,6 +99,20 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
     return () => window.clearTimeout(id);
   }, [isTicketComplete]);
 
+  // DEV ONLY: nhấn Shift+D để fill ngay ticketBoard và trigger modal
+  useEffect(() => {
+    if (import.meta.env.PROD) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key === "D") {
+        setFlyFinished(false);
+        flyCompleteRef.current = false;
+        setTicketBoard([1, 2, 3]);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   useLayoutEffect(() => {
     if (!isTicketComplete) return;
     if (ticketFly) return;
@@ -502,7 +516,12 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                           transformOrigin: "50% 50%",
                           willChange: "transform",
                         }}
-                        initial={{ scale: 1 }}
+                        initial={{
+                          scale:
+                            ticketFly.w /
+                            (ticketFly.w +
+                              LUCKY_DRAW_FLY_TICKET_EXTRA_WIDTH_PX),
+                        }}
                         animate={{ scale: ticketFly.endScale }}
                         transition={{
                           duration: LUCKY_DRAW_FLY_DURATION_S,
@@ -517,6 +536,7 @@ export default function PrizeDetailScreen({ prizeId, onBack }) {
                               "radial-gradient(circle, rgba(255,248,220,0.48) 0%, rgba(130,205,255,0.22) 40%, transparent 68%)",
                             boxShadow:
                               "0 0 56px 28px rgba(255,230,170,0.28), 0 0 88px 44px rgba(100,185,255,0.14)",
+                            animationDuration: `${LUCKY_DRAW_FLY_DURATION_S}s`,
                           }}
                         />
                         <div

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // Assets
 import backgroundImg from "../assets/background.jpg";
-import logoGame from "../assets/logo-game.png";
+import logoGame from "../assets/logo.svg";
 import logoKozocom from "../../assets/logo.png";
 import nextSvg from "../assets/next.svg";
 import preDisableSvg from "../assets/preDisable.svg";
@@ -104,7 +104,7 @@ export default function LandingScreen({ onNext }) {
       {/* ── Top-left Back button (only on PLAY NOW screen) ── */}
       {isLast && (
         <motion.button
-          className="absolute top-4 left-4 md:top-6 md:left-8 w-10 h-10 md:w-12 md:h-12 z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+          className="absolute top-4 left-4 w-10 h-10 md:w-12 md:h-12 z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
           onClick={handlePrev}
           aria-label="Back"
           initial={{ opacity: 0, x: -20 }}
@@ -118,6 +118,7 @@ export default function LandingScreen({ onNext }) {
           />
         </motion.button>
       )}
+      <SoundToggleButton className="absolute top-4 left-20 z-20 w-10 h-10 md:w-12 md:h-12 cursor-pointer hover:scale-110 active:scale-95 transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40 rounded-full" />
 
       {/* ── Header: Logo + Speaker ── */}
       <motion.div
@@ -131,7 +132,6 @@ export default function LandingScreen({ onNext }) {
           alt="KOZOCOM"
           className="h-6 md:h-8 object-contain"
         />
-        <SoundToggleButton />
       </motion.div>
 
       {/* ── Title Logo — compact top so cards (~60vh) fit one screen ── */}
