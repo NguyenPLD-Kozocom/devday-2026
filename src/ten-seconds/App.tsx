@@ -105,6 +105,7 @@ type TryAgainParticle = {
 
 const TRY_AGAIN_BURST_MAX = 42;
 const TRY_AGAIN_BURST_INTERVAL_MS = 420;
+const ENTER_ACTION_COOLDOWN_MS = 2000;
 
 /** Many small icons float up and fade; stops when the modal unmounts (Chơi lại). */
 const TryAgainParticleBurst = ({ imageSrc }: { imageSrc: string }) => {
@@ -277,10 +278,10 @@ const JackpotCelebrationLayer = () => {
     const burstFromTop = (x: number) => {
       void fire({
         disableForReducedMotion: true,
-        particleCount: 32 + Math.floor(Math.random() * 24),
+        particleCount: 56 + Math.floor(Math.random() * 34),
         angle: 90,
-        spread: 52 + Math.random() * 22,
-        startVelocity: 28 + Math.random() * 14,
+        spread: 62 + Math.random() * 28,
+        startVelocity: 34 + Math.random() * 18,
         origin: {
           x: Math.min(0.94, Math.max(0.06, x)),
           y: -0.04,
@@ -297,20 +298,20 @@ const JackpotCelebrationLayer = () => {
     const burstSides = () => {
       void fire({
         disableForReducedMotion: true,
-        particleCount: 22 + Math.floor(Math.random() * 16),
+        particleCount: 36 + Math.floor(Math.random() * 24),
         angle: 65,
-        spread: 42,
-        startVelocity: 42,
+        spread: 52,
+        startVelocity: 48,
         origin: { x: 0.04, y: 0.72 },
         colors: JACKPOT_CONFETTI_COLORS,
         shapes: ["circle", "star"],
       });
       void fire({
         disableForReducedMotion: true,
-        particleCount: 22 + Math.floor(Math.random() * 16),
+        particleCount: 36 + Math.floor(Math.random() * 24),
         angle: 115,
-        spread: 42,
-        startVelocity: 42,
+        spread: 52,
+        startVelocity: 48,
         origin: { x: 0.96, y: 0.72 },
         colors: JACKPOT_CONFETTI_COLORS,
         shapes: ["circle", "star"],
@@ -318,12 +319,17 @@ const JackpotCelebrationLayer = () => {
     };
 
     const run = () => {
-      burstFromTop(0.35 + Math.random() * 0.3);
-      if (Math.random() > 0.55) burstSides();
+      burstFromTop(0.2 + Math.random() * 0.2);
+      burstFromTop(0.4 + Math.random() * 0.2);
+      burstFromTop(0.6 + Math.random() * 0.2);
+      burstSides();
+      if (Math.random() > 0.35) {
+        burstSides();
+      }
     };
 
     run();
-    const intervalId = window.setInterval(run, 980);
+    const intervalId = window.setInterval(run, 680);
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -331,11 +337,11 @@ const JackpotCelebrationLayer = () => {
     <>
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 z-[52] h-full w-full"
+        className="pointer-events-none absolute inset-0 z-[72] h-full w-full"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 z-[53] overflow-hidden"
+        className="pointer-events-none absolute inset-0 z-[73] overflow-hidden"
         aria-hidden
       >
         <div className="jackpot-disco-rig absolute inset-0">
@@ -358,7 +364,7 @@ const JackpotCelebrationLayer = () => {
             );
           })}
         </div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_56%_at_50%_40%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.32)_52%,rgba(0,0,0,0.72)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_56%_60%_at_50%_38%,rgba(255,248,220,0.22)_0%,rgba(255,223,128,0.08)_45%,rgba(255,255,255,0)_100%)]" />
       </div>
     </>
   );
@@ -432,6 +438,7 @@ function App() {
   const [timer, setTimer] = useState(0);
   const animationFrame = useRef<number | undefined>(undefined);
   const startTime = useRef<number | undefined>(undefined);
+  const enterActionLockUntilRef = useRef(0);
   const backgroundVideoRef = useRef<HTMLVideoElement>(null);
   const gameSoundVideoRef = useRef<HTMLVideoElement>(null);
   const clapAudioRef = useRef<HTMLAudioElement>(null);
@@ -512,11 +519,31 @@ function App() {
     };
 
     if (tier === "jackpot") {
-      const a = new Audio(prizeJackpotSfx);
-      a.loop = false;
-      void a.play().catch(() => {});
+      const mainLoopAudio = new Audio(prizeJackpotSfx);
+      mainLoopAudio.loop = true;
+      mainLoopAudio.currentTime = 0;
+      void mainLoopAudio.play().catch(() => {});
+
+      const fireworkAudio = new Audio(prizeNear1Sfx);
+      fireworkAudio.loop = false;
+      const onFireworkPart1Ended = () => {
+        if (cancelled) return;
+        fireworkAudio.removeEventListener("ended", onFireworkPart1Ended);
+        fireworkAudio.src = prizeNear2Sfx;
+        fireworkAudio.load();
+        fireworkAudio.loop = false;
+        fireworkAudio.currentTime = 0;
+        void fireworkAudio.play().catch(() => {});
+      };
+
+      fireworkAudio.addEventListener("ended", onFireworkPart1Ended);
+      void fireworkAudio.play().catch(() => {});
+
       return () => {
-        stopAudio(a);
+        cancelled = true;
+        fireworkAudio.removeEventListener("ended", onFireworkPart1Ended);
+        stopAudio(mainLoopAudio);
+        stopAudio(fireworkAudio);
       };
     }
 
@@ -587,6 +614,9 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Enter" || e.repeat) return;
 
+      const now = Date.now();
+      if (now < enterActionLockUntilRef.current) return;
+
       if (gameState === "idle") {
         e.preventDefault();
         handleStart();
@@ -595,6 +625,7 @@ function App() {
 
       if (gameState === "running") {
         e.preventDefault();
+        enterActionLockUntilRef.current = now + ENTER_ACTION_COOLDOWN_MS;
         stopTimer();
         return;
       }
@@ -933,7 +964,7 @@ function App() {
                                 src={prizeTier.imageSrc}
                                 alt=""
                                 className={cn(
-                                  "relative z-[1] h-[150px] w-auto max-w-full select-none object-contain",
+                                  "relative z-[1] h-[300px] w-auto max-w-full select-none object-contain",
                                   prizeTier.tier === "jackpot"
                                     ? "drop-shadow-[0_12px_36px_rgba(0,0,0,0.45),0_0_24px_rgba(250,204,21,0.25)]"
                                     : "drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)]",

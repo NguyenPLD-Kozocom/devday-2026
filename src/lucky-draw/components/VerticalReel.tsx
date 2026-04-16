@@ -222,7 +222,7 @@ export default function VerticalReel({
                           lineHeight: 1,
                           letterSpacing: "0.01em",
                           fontVariantNumeric: "tabular-nums",
-                          color: isCenter ? "#ffffff" : "#9fc9ff",
+                          color: "#ffffff",
                           opacity: isIdleEmptyCenter
                             ? 0
                             : isCenter
@@ -231,8 +231,9 @@ export default function VerticalReel({
                                 : 1
                               : 0.72,
                           textShadow: isCenter
-                            ? "0 1px 0 rgba(0,0,0,0.28)"
+                            ? "0 0 8px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)"
                             : "0 0 4px rgba(130,198,255,0.22)",
+                          WebkitTextStroke: "2px #1d4ed8",
                           filter: isCenter ? "blur(0px)" : "blur(0.9px)",
                         }}
                       >
@@ -278,10 +279,11 @@ export default function VerticalReel({
                         lineHeight: 1,
                         letterSpacing: "0.01em",
                         fontVariantNumeric: "tabular-nums",
-                        color: "#cfe6ff",
+                        color: "#ffffff",
                         opacity: 0.9,
                         textShadow:
-                          "0 0 10px rgba(155,220,255,0.35), 0 1px 0 rgba(0,0,0,0.2)",
+                          "0 0 10px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)",
+                        WebkitTextStroke: "2px #1d4ed8",
                       }}
                     >
                       {d}

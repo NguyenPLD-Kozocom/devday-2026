@@ -106,30 +106,61 @@ const LuckyDrawNearConfetti = ({ colors }) => {
     const burst = (originX, angle) => {
       void fire({
         disableForReducedMotion: true,
-        particleCount: 38 + Math.floor(Math.random() * 28),
-        spread: 48 + Math.random() * 20,
-        startVelocity: 36 + Math.random() * 16,
+        particleCount: 62 + Math.floor(Math.random() * 38),
+        spread: 52 + Math.random() * 26,
+        startVelocity: 38 + Math.random() * 18,
         angle,
         origin: {
           x: Math.min(0.97, Math.max(0.03, originX)),
-          y: 0.86 + Math.random() * 0.11,
+          y: 0.84 + Math.random() * 0.12,
         },
         colors,
-        ticks: 260 + Math.floor(Math.random() * 80),
-        gravity: 0.88,
-        scalar: 0.85 + Math.random() * 0.3,
-        drift: (Math.random() - 0.5) * 0.25,
+        ticks: 300 + Math.floor(Math.random() * 100),
+        gravity: 0.86,
+        scalar: 0.88 + Math.random() * 0.32,
+        drift: (Math.random() - 0.5) * 0.28,
         shapes: ["circle", "square"],
       });
     };
 
-    const runPair = () => {
-      burst(0.09 + Math.random() * 0.1, 58 + Math.random() * 18);
-      burst(0.81 + Math.random() * 0.1, 122 + Math.random() * 18);
+    const burstFan = (originX, baseAngle) => {
+      burst(originX, baseAngle - 14 + Math.random() * 8);
+      burst(originX + (Math.random() - 0.5) * 0.06, baseAngle + 10 + Math.random() * 8);
     };
 
-    runPair();
-    const intervalId = window.setInterval(runPair, 1100);
+    const burstSky = () => {
+      void fire({
+        disableForReducedMotion: true,
+        particleCount: 48 + Math.floor(Math.random() * 32),
+        angle: 90,
+        spread: 68 + Math.random() * 18,
+        startVelocity: 22 + Math.random() * 12,
+        origin: {
+          x: 0.35 + Math.random() * 0.3,
+          y: 0.18 + Math.random() * 0.12,
+        },
+        colors,
+        ticks: 280 + Math.floor(Math.random() * 90),
+        gravity: 0.72,
+        scalar: 0.75 + Math.random() * 0.25,
+        drift: (Math.random() - 0.5) * 0.15,
+        shapes: ["circle", "square"],
+      });
+    };
+
+    let tick = 0;
+    const runWave = () => {
+      burstFan(0.07 + Math.random() * 0.12, 56 + Math.random() * 16);
+      burstFan(0.8 + Math.random() * 0.12, 124 + Math.random() * 16);
+      if (tick % 2 === 0) {
+        burst(0.48 + (Math.random() - 0.5) * 0.08, 88 + Math.random() * 12);
+      }
+      if (tick % 3 === 0) burstSky();
+      tick += 1;
+    };
+
+    runWave();
+    const intervalId = window.setInterval(runWave, 720);
 
     return () => {
       window.clearInterval(intervalId);
@@ -163,19 +194,19 @@ const LuckyDrawJackpotConfetti = () => {
     const burstFromTop = (x) => {
       void fire({
         disableForReducedMotion: true,
-        particleCount: 32 + Math.floor(Math.random() * 24),
+        particleCount: 58 + Math.floor(Math.random() * 42),
         angle: 90,
-        spread: 52 + Math.random() * 22,
-        startVelocity: 28 + Math.random() * 14,
+        spread: 58 + Math.random() * 28,
+        startVelocity: 32 + Math.random() * 18,
         origin: {
           x: Math.min(0.94, Math.max(0.06, x)),
-          y: -0.04,
+          y: -0.06,
         },
         colors: LD_JACKPOT_CONFETTI_COLORS,
-        ticks: 320 + Math.floor(Math.random() * 80),
-        gravity: 0.95,
-        scalar: 0.9 + Math.random() * 0.35,
-        drift: (Math.random() - 0.5) * 0.2,
+        ticks: 380 + Math.floor(Math.random() * 120),
+        gravity: 0.92,
+        scalar: 0.95 + Math.random() * 0.45,
+        drift: (Math.random() - 0.5) * 0.22,
         shapes: ["circle", "square", "star"],
       });
     };
@@ -183,36 +214,109 @@ const LuckyDrawJackpotConfetti = () => {
     const burstSides = () => {
       void fire({
         disableForReducedMotion: true,
-        particleCount: 22 + Math.floor(Math.random() * 16),
-        angle: 65,
-        spread: 42,
-        startVelocity: 42,
-        origin: { x: 0.04, y: 0.72 },
+        particleCount: 38 + Math.floor(Math.random() * 26),
+        angle: 62,
+        spread: 48 + Math.random() * 12,
+        startVelocity: 46 + Math.random() * 12,
+        origin: { x: 0.02, y: 0.68 + Math.random() * 0.08 },
         colors: LD_JACKPOT_CONFETTI_COLORS,
-        shapes: ["circle", "star"],
+        ticks: 340 + Math.floor(Math.random() * 80),
+        shapes: ["circle", "square", "star"],
       });
       void fire({
         disableForReducedMotion: true,
-        particleCount: 22 + Math.floor(Math.random() * 16),
-        angle: 115,
-        spread: 42,
-        startVelocity: 42,
-        origin: { x: 0.96, y: 0.72 },
+        particleCount: 38 + Math.floor(Math.random() * 26),
+        angle: 118,
+        spread: 48 + Math.random() * 12,
+        startVelocity: 46 + Math.random() * 12,
+        origin: { x: 0.98, y: 0.68 + Math.random() * 0.08 },
         colors: LD_JACKPOT_CONFETTI_COLORS,
+        ticks: 340 + Math.floor(Math.random() * 80),
+        shapes: ["circle", "square", "star"],
+      });
+    };
+
+    const burstCoronation = () => {
+      void fire({
+        disableForReducedMotion: true,
+        particleCount: 110 + Math.floor(Math.random() * 50),
+        spread: 360,
+        startVelocity: 28 + Math.random() * 12,
+        origin: { x: 0.5, y: 0.42 },
+        colors: LD_JACKPOT_CONFETTI_COLORS,
+        ticks: 420 + Math.floor(Math.random() * 100),
+        gravity: 0.65,
+        scalar: 1.05 + Math.random() * 0.35,
+        drift: (Math.random() - 0.5) * 0.08,
         shapes: ["circle", "star"],
       });
     };
 
+    const burstGoldenArc = () => {
+      void fire({
+        disableForReducedMotion: true,
+        particleCount: 72 + Math.floor(Math.random() * 36),
+        angle: 270,
+        spread: 42 + Math.random() * 16,
+        startVelocity: 38 + Math.random() * 14,
+        origin: { x: 0.5, y: 0.92 },
+        colors: LD_JACKPOT_CONFETTI_COLORS,
+        ticks: 360 + Math.floor(Math.random() * 90),
+        gravity: 0.55,
+        scalar: 1.1 + Math.random() * 0.3,
+        shapes: ["star", "square"],
+      });
+    };
+
+    const timeoutIds = [];
+
+    const openingSalvo = () => {
+      burstCoronation();
+      burstFromTop(0.22);
+      burstFromTop(0.78);
+      timeoutIds.push(
+        window.setTimeout(() => {
+          burstSides();
+          burstGoldenArc();
+        }, 140),
+      );
+      timeoutIds.push(
+        window.setTimeout(() => {
+          void fire({
+            disableForReducedMotion: true,
+            particleCount: 85 + Math.floor(Math.random() * 40),
+            angle: 90,
+            spread: 70,
+            startVelocity: 48,
+            origin: { x: 0.5, y: 0.05 },
+            colors: LD_JACKPOT_CONFETTI_COLORS,
+            ticks: 400,
+            gravity: 1,
+            scalar: 1.15,
+            shapes: ["circle", "square", "star"],
+          });
+        }, 280),
+      );
+    };
+
+    openingSalvo();
+
+    let pulse = 0;
     const run = () => {
-      burstFromTop(0.35 + Math.random() * 0.3);
-      if (Math.random() > 0.55) burstSides();
+      burstFromTop(0.12 + Math.random() * 0.76);
+      if (pulse % 2 === 0) burstFromTop(0.18 + Math.random() * 0.64);
+      burstSides();
+      if (pulse % 3 === 0) burstGoldenArc();
+      if (pulse % 4 === 0) burstCoronation();
+      pulse += 1;
     };
 
     run();
-    const intervalId = window.setInterval(run, 980);
+    const intervalId = window.setInterval(run, 520);
 
     return () => {
       window.clearInterval(intervalId);
+      timeoutIds.forEach((id) => window.clearTimeout(id));
     };
   }, []);
 
@@ -417,72 +521,76 @@ export const LuckyDrawExpandedTicketContent = ({
       >
         <ResultSpotlightFunnel tier={tier} />
       </motion.div>
-      <div
-        className={`relative flex w-full flex-col items-center justify-center gap-1 ${prizeBlockOverflow} ${prizeBlockClass}`}
-      >
-        <motion.img
-          src={artSrc}
-          alt={prizeName}
-          className={`relative z-[1] w-full max-w-full flex-1 min-h-0 origin-center object-contain drop-shadow-[0_12px_32px_rgba(15,23,42,0.22)] ${prizeArtMaxHClass}`}
-          initial={false}
-          animate={
-            prizeHidden
-              ? { opacity: 0, scale: 0 }
-              : { opacity: 1, scale: prizeArtRevealScale }
-          }
-          transition={prizeTransition}
-        />
-        <motion.p
-          id="lucky-draw-result-label"
-          className={`relative z-[1] shrink-0 text-center font-semibold uppercase leading-tight tracking-[0.16em] md:tracking-[0.2em] ${
-            tier === "gold"
-              ? "text-sm text-amber-900/90 md:text-base"
-              : tier === "silver"
-                ? "text-xs text-slate-700 md:text-sm"
-                : "text-xs text-amber-950/85 md:text-sm"
-          }`}
-          initial={false}
-          animate={
-            prizeHidden ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }
-          }
-          transition={{
-            ...prizeTransition,
-            delay: prizeHidden ? 0 : 0.14,
-          }}
+      <div className="relative z-[1] flex w-full items-center justify-between gap-4 md:gap-6">
+        <div
+          className={`flex flex-1 justify-start gap-3 sm:gap-4 md:gap-5 ${wide ? "max-w-none" : "max-w-[400px]"}`}
+          role="group"
+          aria-label="Ba chữ số kết quả"
         >
-          {prizeLabel}
-        </motion.p>
-      </div>
-      <div
-        className={`relative z-[1] flex w-full justify-center gap-3 sm:gap-4 md:gap-5 ${wide ? "max-w-none" : "max-w-[400px]"}`}
-        role="group"
-        aria-label="Ba chữ số kết quả"
-      >
-        {digits.map((d, i) => (
-          <motion.div
-            key={i}
-            ref={(el) => {
-              if (digitSlotRefs) digitSlotRefs.current[i] = el;
-            }}
-            layout
-            layoutId={`ld-result-digit-${prizeId}-${i}`}
-            transition={ldResultDigitLayoutTransition}
-            className={getLuckyDrawDigitSlotClassName({
-              tier,
-              filled: true,
-            })}
-          >
-            <span
-              className="select-none tabular-nums"
-              style={getLuckyDrawDigitTextStyle({
+          {digits.map((d, i) => (
+            <motion.div
+              key={i}
+              ref={(el) => {
+                if (digitSlotRefs) digitSlotRefs.current[i] = el;
+              }}
+              layout
+              layoutId={`ld-result-digit-${prizeId}-${i}`}
+              transition={ldResultDigitLayoutTransition}
+              className={getLuckyDrawDigitSlotClassName({
                 tier,
                 filled: true,
               })}
             >
-              {d}
-            </span>
-          </motion.div>
-        ))}
+              <span
+                className="flex h-full w-full items-center justify-center select-none tabular-nums leading-none"
+                style={getLuckyDrawDigitTextStyle({
+                  tier,
+                  filled: true,
+                })}
+              >
+                <span className="block leading-none translate-y-[2px]">
+                  {d}
+                </span>
+              </span>
+            </motion.div>
+          ))}
+        </div>
+        <div
+          className={`relative flex flex-1 flex-col items-center justify-center gap-1 ${prizeBlockOverflow} ${prizeBlockClass}`}
+        >
+          <motion.img
+            src={artSrc}
+            alt={prizeName}
+            className={`relative z-[1] w-full max-w-full flex-1 min-h-0 origin-center object-contain drop-shadow-[0_12px_32px_rgba(15,23,42,0.22)] ${prizeArtMaxHClass}`}
+            initial={false}
+            animate={
+              prizeHidden
+                ? { opacity: 0, scale: 0 }
+                : { opacity: 1, scale: prizeArtRevealScale }
+            }
+            transition={prizeTransition}
+          />
+          <motion.p
+            id="lucky-draw-result-label"
+            className={`relative z-[1] shrink-0 text-center font-semibold uppercase leading-tight tracking-[0.16em] md:tracking-[0.2em] ${
+              tier === "gold"
+                ? "text-sm text-amber-900/90 md:text-base"
+                : tier === "silver"
+                  ? "text-xs text-slate-700 md:text-sm"
+                  : "text-xs text-amber-950/85 md:text-sm"
+            }`}
+            initial={false}
+            animate={
+              prizeHidden ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }
+            }
+            transition={{
+              ...prizeTransition,
+              delay: prizeHidden ? 0 : 0.14,
+            }}
+          >
+            {prizeLabel}
+          </motion.p>
+        </div>
       </div>
     </div>
   );

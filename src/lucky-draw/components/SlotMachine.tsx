@@ -8,7 +8,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import VerticalReel from "./VerticalReel";
 import Confetti from "./Confetti";
-import spinSfxUrl from "../assets/spin.mp3";
+import spinSfx1Url from "../assets/spin-1.mp4";
+import spinSfx2Url from "../assets/spin-2.mp4";
+import spinSfx3Url from "../assets/spin-3.mp3";
 import tadaSfxUrl from "../assets/tada.mp3";
 import { useSfxOverlayWhile, useSoundSettings } from "../SoundSettingsContext";
 import logoGame from "../assets/logo-game.png";
@@ -18,6 +20,12 @@ import {
 } from "../ticketDigitTheme";
 
 type ResultTier = "gold" | "silver" | "bronze";
+
+const SPIN_SFX_BY_TIER: Record<ResultTier, string> = {
+  gold: spinSfx1Url,
+  silver: spinSfx2Url,
+  bronze: spinSfx3Url,
+};
 
 /** Bay lên + phóng to tại ô quay (giây), sau đó bay chậm vào ô kết quả */
 const FLY_RISE_DURATION_SEC = 4;
@@ -341,17 +349,23 @@ export default function SlotMachine({
     setPhase("spinning");
 
     if (!spinAudioRef.current) {
-      const created = new Audio(spinSfxUrl);
+      const created = new Audio();
       created.loop = true;
       spinAudioRef.current = created;
     }
     const spin = spinAudioRef.current;
     if (!spin) return;
+    const nextSrc = SPIN_SFX_BY_TIER[resultTier];
+    if (spin.getAttribute("data-spin-src") !== nextSrc) {
+      spin.setAttribute("data-spin-src", nextSrc);
+      spin.src = nextSrc;
+      spin.load();
+    }
     spin.currentTime = 0;
     if (soundEnabled) {
       void spin.play().catch(() => {});
     }
-  }, [phase, board, idleDigit, soundEnabled, safeMaxSpinDigit]);
+  }, [phase, board, idleDigit, soundEnabled, safeMaxSpinDigit, resultTier]);
 
   const reelMode =
     phase === "spinning" ? "spinning" : phase === "flying" ? "locked" : "idle";
@@ -516,7 +530,9 @@ export default function SlotMachine({
                   fontVariantNumeric: "tabular-nums",
                   lineHeight: 1,
                   color: "#ffffff",
-                  textShadow: REEL_DIGIT_TEXT_SHADOW,
+                  textShadow:
+                    "0 0 10px rgba(59,130,246,0.35), " + REEL_DIGIT_TEXT_SHADOW,
+                  WebkitTextStroke: "2px #1d4ed8",
                 }}
               >
                 {flyPos.digit}
@@ -543,7 +559,8 @@ export default function SlotMachine({
                 : "clamp(46px, 6vw, 74px)",
               color: "#ffffff",
               textShadow:
-                "0 0 10px rgba(255,255,255,0.45), 0 1px 0 rgba(0,0,0,0.2)",
+                "0 0 10px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)",
+              WebkitTextStroke: "2px #1d4ed8",
             }}
             initial={{ scale: 1.38, opacity: 1 }}
             animate={{ scale: 0.68, opacity: 1 }}
@@ -614,7 +631,7 @@ export default function SlotMachine({
         )}
       </AnimatePresence>
 
-      <Confetti active={showConfetti} />
+      <Confetti active={showConfetti} tier={resultTier} />
     </div>
   );
 }

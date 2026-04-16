@@ -15,7 +15,7 @@ const STORAGE_KEY = "lucky_draw_sound_enabled";
 /** Nhạc nền bình thường (các SFX khác dùng ~0.88–1) */
 const BACKGROUND_MUSIC_VOLUME = 0.3;
 /** Khi có SFX (spin, wow, …) — hạ BGM để SFX rõ */
-const BACKGROUND_MUSIC_VOLUME_DUCKED = 0.1;
+const BACKGROUND_MUSIC_VOLUME_DUCKED = 0.01;
 
 export type SoundSettingsValue = {
   soundEnabled: boolean;

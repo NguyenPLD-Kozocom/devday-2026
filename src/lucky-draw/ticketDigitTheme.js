@@ -9,31 +9,40 @@ export const getDigitTier = (prizeId) => {
 };
 
 const SLOT_BASE =
-  "flex aspect-3/4 flex-col items-center justify-center rounded-[11px] md:rounded-[13px] min-h-[92px] w-[24%] max-w-[118px] min-w-[66px] md:min-h-[124px] md:max-w-[138px]";
+  "flex aspect-square flex-col items-center justify-center rounded-full min-h-[108px] w-[30%] max-w-[146px] min-w-[86px] md:min-h-[138px] md:max-w-[166px]";
+
+/** Ô số trên vé bay (giữa màn — phóng to hơn vé tĩnh). */
+const SLOT_FLY =
+  "flex aspect-square flex-col items-center justify-center rounded-full min-h-[128px] w-[32%] max-w-[180px] min-w-[96px] md:min-h-[158px] md:max-w-[200px] md:min-w-[108px]";
 
 const SIDE_BOARD_COMPACT =
   "flex h-14 w-12 shrink-0 items-center justify-center rounded-[10px] md:h-16 md:w-14";
 const SIDE_BOARD =
   "flex h-20 w-16 shrink-0 items-center justify-center rounded-[14px] md:h-[92px] md:w-20";
 
-/** @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean }} p */
-export const getLuckyDrawDigitSlotClassName = ({ tier, filled }) => {
+/** @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean, variant?: 'ticket' | 'fly' }} p */
+export const getLuckyDrawDigitSlotClassName = ({
+  tier,
+  filled,
+  variant = "ticket",
+}) => {
+  const slot = variant === "fly" ? SLOT_FLY : SLOT_BASE;
   if (!filled) {
     if (tier === "gold") {
-      return `${SLOT_BASE} border-2 border-amber-400/85 bg-linear-to-b from-amber-800/55 via-amber-950/95 to-black shadow-[0_0_20px_rgba(250,204,21,0.35),inset_0_2px_0_rgba(254,243,199,0.35),inset_0_-10px_24px_rgba(0,0,0,0.55)] ring-2 ring-amber-300/40`;
+      return `${slot} border-[3px] border-[#f6d84b] bg-white ring-2 ring-[#ffe98a]/85 shadow-[0_0_18px_rgba(250,204,21,0.38)]`;
     }
     if (tier === "silver") {
-      return `${SLOT_BASE} border-2 border-slate-200/75 bg-linear-to-b from-slate-500/90 via-slate-800 to-slate-950 shadow-[0_0_18px_rgba(226,232,240,0.28),inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-8px_20px_rgba(0,0,0,0.5)] ring-2 ring-slate-300/45`;
+      return `${slot} border-[3px] border-[#cdd9ea] bg-white ring-2 ring-[#eef4ff]/90 shadow-[0_0_16px_rgba(203,213,225,0.35)]`;
     }
-    return `${SLOT_BASE} border-2 border-[#E8935A]/85 bg-linear-to-b from-[#5c3014]/90 via-[#2a150a] to-black shadow-[0_0_20px_rgba(249,115,22,0.32),inset_0_2px_0_rgba(254,215,170,0.28),inset_0_-8px_22px_rgba(0,0,0,0.55)] ring-2 ring-orange-400/40`;
+    return `${slot} border-[3px] border-[#f3ae78] bg-white ring-2 ring-[#ffd7b1]/85 shadow-[0_0_16px_rgba(251,146,60,0.34)]`;
   }
   if (tier === "gold") {
-    return `${SLOT_BASE} border-[3px] border-[#FFEA00] bg-linear-to-b from-[#6b5200] via-[#3d2e00] to-[#1a0f00] shadow-[0_0_28px_rgba(255,215,0,0.65),0_0_52px_rgba(251,191,36,0.35),0_12px_28px_rgba(0,0,0,0.6),inset_0_3px_0_rgba(255,250,205,0.55),inset_0_-10px_28px_rgba(0,0,0,0.55)] ring-[3px] ring-amber-200/70`;
+    return `${slot} border-[3px] border-[#f5cc2f] bg-white ring-2 ring-[#ffec99] shadow-[0_0_20px_rgba(250,204,21,0.48)]`;
   }
   if (tier === "silver") {
-    return `${SLOT_BASE} border-[3px] border-white bg-linear-to-b from-[#8b9cb3] via-[#4a5568] to-[#0f1218] shadow-[0_0_26px_rgba(255,255,255,0.45),0_0_40px_rgba(186,230,253,0.22),0_12px_28px_rgba(0,0,0,0.55),inset_0_3px_0_rgba(255,255,255,0.5),inset_0_-8px_22px_rgba(0,0,0,0.5)] ring-[3px] ring-cyan-100/50`;
+    return `${slot} border-[3px] border-[#bfcee3] bg-white ring-2 ring-[#f3f7ff] shadow-[0_0_18px_rgba(148,163,184,0.45)]`;
   }
-  return `${SLOT_BASE} border-[3px] border-[#FF9F43] bg-linear-to-b from-[#8B4513] via-[#5c2e0e] to-[#1a0d04] shadow-[0_0_26px_rgba(251,146,60,0.55),0_0_44px_rgba(234,88,12,0.28),0_12px_28px_rgba(0,0,0,0.58),inset_0_3px_0_rgba(255,215,180,0.4),inset_0_-8px_22px_rgba(0,0,0,0.52)] ring-[3px] ring-orange-300/65`;
+  return `${slot} border-[3px] border-[#ee9b5f] bg-white ring-2 ring-[#ffd2ad] shadow-[0_0_18px_rgba(249,115,22,0.42)]`;
 };
 
 /**
@@ -64,41 +73,23 @@ export const getLuckyDrawSideBoardSlotClassName = ({
   return `${base} border-[3px] border-[#FF9F43] bg-linear-to-b from-[#8B4513] via-[#5c2e0e] to-[#1a0d04] shadow-[0_0_20px_rgba(251,146,60,0.48),0_0_34px_rgba(234,88,12,0.22),inset_0_2px_0_rgba(255,215,180,0.35)] ring-2 ring-orange-300/55`;
 };
 
-/** @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean }} p */
-export const getLuckyDrawDigitTextStyle = ({ tier, filled }) => {
-  const fontSize = "clamp(52px, 9.2vw + 10px, 98px)";
-  if (!filled) {
-    const emptyColor =
-      tier === "gold" ? "#fde68a" : tier === "silver" ? "#e2e8f0" : "#fdba74";
-    return {
-      fontFamily: "'Oswald', sans-serif",
-      fontWeight: 900,
-      fontSize,
-      lineHeight: 1,
-      color: emptyColor,
-      textShadow:
-        tier === "gold"
-          ? "0 0 12px rgba(250,204,21,0.5)"
-          : tier === "silver"
-            ? "0 0 10px rgba(255,255,255,0.35)"
-            : "0 0 12px rgba(251,146,60,0.45)",
-    };
-  }
-  const goldGlow =
-    "0 2px 0 rgba(0,0,0,0.85), 0 0 8px rgba(0,0,0,0.6), 0 0 36px rgba(255,215,0,0.85), 0 0 56px rgba(250,204,21,0.45), 0 1px 0 rgba(255,255,255,0.65)";
-  const silverGlow =
-    "0 2px 0 rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.55), 0 0 32px rgba(255,255,255,0.65), 0 0 48px rgba(186,230,253,0.35), 0 1px 0 rgba(255,255,255,0.9)";
-  const bronzeGlow =
-    "0 2px 0 rgba(0,0,0,0.82), 0 0 8px rgba(0,0,0,0.58), 0 0 34px rgba(251,146,60,0.75), 0 0 50px rgba(234,88,12,0.35), 0 1px 0 rgba(255,237,213,0.55)";
+/** @param {{ tier: 'gold' | 'silver' | 'bronze', filled: boolean, variant?: 'ticket' | 'fly' }} p */
+export const getLuckyDrawDigitTextStyle = ({
+  tier,
+  filled,
+  variant = "ticket",
+}) => {
+  const fontSize =
+    variant === "fly"
+      ? "clamp(96px, 13.5vw + 14px, 188px)"
+      : "clamp(80px, 11.2vw + 12px, 154px)";
   return {
     fontFamily: "'Oswald', sans-serif",
     fontWeight: 900,
     fontSize,
     lineHeight: 1,
-    color:
-      tier === "gold" ? "#FFFACD" : tier === "silver" ? "#FFFFFF" : "#FFE4C4",
-    textShadow:
-      tier === "gold" ? goldGlow : tier === "silver" ? silverGlow : bronzeGlow,
+    color: filled ? "#0d3c9f" : "#5d7fc8",
+    textShadow: "none",
   };
 };
 
