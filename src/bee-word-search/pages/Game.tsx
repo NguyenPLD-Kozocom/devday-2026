@@ -19,18 +19,23 @@ import buttonSoundOn from "../assets/button_sound_on.png";
 
 const MAX_TURNS = 4;
 
-function generateInitialCells(): CellData[] {
-  const showKozocom = Math.random() < 0.5;
+let sessionGamesPlayed = 0;
+
+function generateInitialCells(canShowKozocom: boolean): CellData[] {
+  const showKozocom = canShowKozocom && Math.random() < 0.5;
+  const isExtraZo = Math.random() < 0.5;
+
   const contents = [
-    { type: "letter", content: showKozocom ? "Kozocom" : "Com" },
+    { type: "letter", content: "Com" },
     ...Array(9).fill({ type: "letter", content: "Ko" }),
-    ...Array(7).fill({ type: "letter", content: "Com" }),
-    ...Array(3).fill({ type: "letter", content: "Zo" }),
+    { type: "letter", content: showKozocom ? "Kozocom" : "Ko" },
+    ...Array(isExtraZo ? 8 : 9).fill({ type: "letter", content: "Com" }),
+    ...Array(isExtraZo ? 3 : 2).fill({ type: "letter", content: "Zo" }),
     { type: "gift", content: "gift-1" },
     { type: "gift", content: "gift-2" },
     { type: "gift", content: "gift-3" },
     { type: "gift", content: "gift-4" },
-    ...Array(5).fill({ type: "boom", content: "💣" }),
+    ...Array(3).fill({ type: "boom", content: "💣" }),
   ];
 
   const shuffled = [...contents].sort(() => Math.random() - 0.5);
@@ -82,7 +87,9 @@ export function Game({ isMuted, toggleMute }: GameProps) {
   const hasWonRef = useRef(false);
 
   const initGame = useCallback(() => {
-    setCells(generateInitialCells());
+    const canShowKozocom = sessionGamesPlayed >= 20;
+
+    setCells(generateInitialCells(canShowKozocom));
     setCollectedTiles([]);
     setGameStatus("playing");
     setShake(false);
@@ -94,6 +101,9 @@ export function Game({ isMuted, toggleMute }: GameProps) {
     setIsBusy(false);
     setIsMerging(false);
     hasWonRef.current = false;
+
+    // Update stats for the NEXT game
+    sessionGamesPlayed++;
   }, []);
 
   useEffect(() => {
@@ -146,7 +156,10 @@ export function Game({ isMuted, toggleMute }: GameProps) {
         gameStatus !== "playing" ||
         actualTurnsLeft <= 0 ||
         flippingCellId ||
-        isBusy
+        isBusy ||
+        showRules ||
+        isMerging ||
+        !!activeGiftTile
       )
         return;
 
@@ -184,12 +197,13 @@ export function Game({ isMuted, toggleMute }: GameProps) {
             }, 500);
           } else if (cell.type === "gift") {
             setTimeout(() => {
-              setActiveGiftTile(newTile);
-              audio.playGift();
               if (isLastTurn) {
                 setWinType("gift");
                 setGameStatus("won");
                 audio.playClaimGift();
+              } else {
+                setActiveGiftTile(newTile);
+                audio.playGift();
               }
             }, 400);
           } else {
@@ -235,6 +249,9 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       actualTurnsLeft,
       flippingCellId,
       isBusy,
+      showRules,
+      isMerging,
+      activeGiftTile,
       setCells,
       setFlippingCellId,
       setCollectedTiles,
@@ -283,7 +300,11 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           onCellClick={handleCellClick}
           flippingCellId={flippingCellId}
         />
-        <CollectionTray tiles={collectedTiles} maxSlots={MAX_TURNS} />
+        <CollectionTray
+          tiles={collectedTiles}
+          maxSlots={MAX_TURNS}
+          isGameOver={gameStatus === "lost"}
+        />
       </div>
 
       {/* Bottom Corner Buttons */}
@@ -312,11 +333,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           className="transition-transform active:scale-90 hover:brightness-110"
         >
           <img
-            src={
-              isMuted
-                ? buttonSoundOff
-                : buttonSoundOn
-            }
+            src={isMuted ? buttonSoundOff : buttonSoundOn}
             alt="Sound"
             className="w-full h-full object-contain drop-shadow-lg"
           />
@@ -324,7 +341,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       </div>
 
       <GiftModal
-        isOpen={!!activeGiftTile}
+        isOpen={!!activeGiftTile && gameStatus === "playing"}
         onClaim={handleClaimGift}
         onContinue={handleContinue}
       />
@@ -344,7 +361,11 @@ export function Game({ isMuted, toggleMute }: GameProps) {
       <GiftWinModal
         isOpen={gameStatus === "won" && winType === "gift"}
         onRestart={initGame}
-        giftContent={collectedTiles.find(t => t.type === "gift" && !t.isDisabled)?.content}
+        giftContent={
+          collectedTiles.find((t) => t.type === "gift" && !t.isDisabled)
+            ?.content
+        }
+        isLastTurn={collectedTiles.length === MAX_TURNS}
       />
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />

@@ -31,16 +31,16 @@ export function MergeAnimation({ onComplete }: MergeAnimationProps) {
               key={part.id}
               initial={{ x: part.initialX, y: part.initialY, scale: 0.5, rotateY: 180 }}
               animate={{ 
-                x: 0, 
-                y: 0, 
+                x: [part.initialX, 0, 0], 
+                y: [part.initialY, 0, 0], 
                 scale: [0.5, 1.2, 1],
                 rotateY: 0,
                 opacity: [1, 1, 0, 0],
               }}
               transition={{ 
-                duration: 1.5, 
-                times: [0, 0.7, 0.8, 1],
-                delay: index * 0.1,
+                duration: 2.5, 
+                times: [0, 0.8, 0.9, 1],
+                delay: index * 0.15,
                 ease: "easeOut" 
               }}
               className="absolute w-[180px] h-[200px]"
@@ -58,7 +58,7 @@ export function MergeAnimation({ onComplete }: MergeAnimationProps) {
             scale: [0.8, 0.8, 1.5, 1],
           }}
           transition={{ 
-            duration: 2.0, 
+            duration: 3.2, 
             times: [0, 0.6, 0.8, 1],
             ease: "easeInOut" 
           }}
@@ -72,7 +72,7 @@ export function MergeAnimation({ onComplete }: MergeAnimationProps) {
               opacity: [0, 1, 0],
               scale: [0.5, 2, 2.5] 
             }}
-            transition={{ duration: 0.8, delay: 1.2 }}
+            transition={{ duration: 1.2, delay: 2.0 }}
             className="absolute inset-0 bg-white rounded-full blur-3xl mix-blend-screen"
           />
           

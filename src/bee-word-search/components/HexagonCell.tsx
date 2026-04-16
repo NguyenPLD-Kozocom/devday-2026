@@ -8,6 +8,10 @@ import honeyCellKozocom from "../assets/honey_cell_kozocom.png";
 import honeyCellGift from "../assets/honey_cell_gift.png";
 import honeyCellBoom from "../assets/honey_cell_boom.png";
 import backHoneyCell from "../assets/back_honey_cell.png";
+import gift1 from "../assets/gift-1.png";
+import gift2 from "../assets/gift-2.png";
+import gift3 from "../assets/gift-3.png";
+import gift4 from "../assets/gift-4.png";
 
 const CONTENT_IMAGES: Record<string, string> = {
   Ko: honeyCellKo,
@@ -16,16 +20,22 @@ const CONTENT_IMAGES: Record<string, string> = {
   Kozocom: honeyCellKozocom,
   gift: honeyCellGift,
   boom: honeyCellBoom,
+  "gift-1": gift1,
+  "gift-2": gift2,
+  "gift-3": gift3,
+  "gift-4": gift4,
 };
 
 export const HexagonTile = memo(function HexagonTile({
   tile,
   inGrid,
   duration,
+  revealGift,
 }: {
   tile: TileData | CellData;
   inGrid?: boolean;
   duration?: number;
+  revealGift?: boolean;
 }) {
   const isDisabled = "isDisabled" in tile && tile.isDisabled;
 
@@ -36,18 +46,28 @@ export const HexagonTile = memo(function HexagonTile({
   const imageSrc =
     tile.type === "letter"
       ? CONTENT_IMAGES[tile.content]
-      : CONTENT_IMAGES[tile.type];
+      : revealGift && tile.type === "gift"
+        ? CONTENT_IMAGES[tile.content]
+        : CONTENT_IMAGES[tile.type];
 
   return (
     <motion.div
       layoutId={tile.id}
       className={`absolute inset-0
-        ${isDisabled ? "opacity-40 grayscale" : ""}
+        ${isDisabled && !revealGift ? "opacity-40 grayscale" : ""}
         ${inGrid ? "z-50" : "z-10"}
       `}
       initial={inGrid ? { rotateY: 180, scale: 1 } : false}
-      animate={{ rotateY: 0, scale: 1 }}
-      transition={{ type: "spring", bounce: 0.15, duration: animDuration }}
+      animate={
+        revealGift && tile.type === "gift"
+          ? { rotateY: 360, scale: 1.1, y: -12 }
+          : { rotateY: 0, scale: 1, y: 0 }
+      }
+      transition={{
+        type: "spring",
+        bounce: 0.3,
+        duration: revealGift ? 0.8 : animDuration,
+      }}
       style={{
         transformStyle: "preserve-3d",
       }}

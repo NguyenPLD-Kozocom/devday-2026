@@ -29,6 +29,7 @@ interface BaseModalProps {
   isOverlayPersistent?: boolean;
   persistentFooter?: React.ReactNode;
   backgroundEffects?: React.ReactNode;
+  isSmall?: boolean;
 }
 
 function Modal({
@@ -44,8 +45,13 @@ function Modal({
   isOverlayPersistent,
   persistentFooter,
   backgroundEffects,
+  isSmall,
 }: BaseModalProps) {
-  const overlayOpacity = isContentHidden ? (isOverlayPersistent ? 0.35 : 0) : 0.65;
+  const overlayOpacity = isContentHidden
+    ? isOverlayPersistent
+      ? 0.35
+      : 0
+    : 0.65;
   const blurAmount = isContentHidden && isOverlayPersistent ? "4px" : "0px";
 
   return (
@@ -56,7 +62,7 @@ function Modal({
             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
             animate={{
               opacity: overlayOpacity,
-              backdropFilter: `blur(${blurAmount})`
+              backdropFilter: `blur(${blurAmount})`,
             }}
             exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
             transition={{ duration: 0.5 }}
@@ -70,7 +76,7 @@ function Modal({
               exit={{ scale: 0.95, opacity: 0 }}
               className={cn(
                 "px-[80px] flex items-center justify-between flex-col py-[60px] w-[930px] pointer-events-auto text-center relative text-white",
-                isLarge ? "h-[792px]" : "h-[752px]",
+                isLarge ? "h-[792px]" : isSmall ? "h-[680px]" : "h-[752px]",
               )}
             >
               {/* Background layer */}
@@ -208,9 +214,14 @@ export function LoseModal({
       isOpen={isOpen}
       type="error"
       icon={type === "boom" ? boomModal : gameOverGif}
-      title={type === "boom" ? "Ối giời ôi! Nổ rồi!" : "Chúc bạn may mắn lần sau!"}
+      title={
+        type === "boom" ? "Ối giời ôi! Nổ rồi!" : "Chúc bạn may mắn lần sau!"
+      }
       titleClassName="font-bold"
-      imgClassName={type === "outOfTurns" ? "w-[440px] h-auto object-contain" : ""}
+      imgClassName={
+        type === "outOfTurns" ? "w-[440px] h-auto object-contain" : ""
+      }
+      isSmall={true}
     >
       <p className="text-[38px] mb-8 text-[#623C00] font-medium">
         {type === "boom"
@@ -341,10 +352,12 @@ export function GiftWinModal({
   isOpen,
   onRestart,
   giftContent,
+  isLastTurn,
 }: {
   isOpen: boolean;
   onRestart: () => void;
   giftContent?: string;
+  isLastTurn?: boolean;
 }) {
   const handleRestart = () => {
     audio.playClick();
@@ -370,7 +383,7 @@ export function GiftWinModal({
     <Modal
       isOpen={isOpen}
       icon={getGiftImage()}
-      title={"Chốt quà thành công!"}
+      title={isLastTurn ? "Nhân phẩm vô cực!" : "Chốt quà thành công!"}
       isLarge={true}
       imgClassName={cn(
         "absolute left-1/2 -translate-x-1/2 transition-all duration-500 top-0",
@@ -382,7 +395,9 @@ export function GiftWinModal({
       )}
     >
       <p className="text-[38px] text-[#623C00] font-medium leading-[1.2] mt-4 mb-4 px-10">
-        Đúng hệ "ăn chắc mặc bền". Chúc mừng bạn đã rinh về quà xịn từ Kozocom!
+        {isLastTurn
+          ? "Suýt soát luôn. Chúc mừng bạn đã rinh về quà xịn từ Kozocom ở lượt cuối!"
+          : 'Đúng hệ "ăn chắc mặc bền". Chúc mừng bạn đã rinh về quà xịn từ Kozocom!'}
       </p>
       <button
         onClick={handleRestart}

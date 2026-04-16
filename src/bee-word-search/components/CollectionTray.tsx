@@ -5,9 +5,14 @@ import type { TileData } from "../types/game";
 interface CollectionTrayProps {
   tiles: TileData[];
   maxSlots: number;
+  isGameOver?: boolean;
 }
 
-export function CollectionTray({ tiles, maxSlots }: CollectionTrayProps) {
+export function CollectionTray({
+  tiles,
+  maxSlots,
+  isGameOver,
+}: CollectionTrayProps) {
   const slots = Array.from({ length: maxSlots });
 
   return (
@@ -23,7 +28,12 @@ export function CollectionTray({ tiles, maxSlots }: CollectionTrayProps) {
             >
               <AnimatePresence mode="wait">
                 {tile && (
-                  <HexagonTile key={tile.id} tile={tile} duration={0.6} />
+                  <HexagonTile
+                    key={tile.id}
+                    tile={tile}
+                    duration={0.6}
+                    revealGift={isGameOver}
+                  />
                 )}
               </AnimatePresence>
             </div>
