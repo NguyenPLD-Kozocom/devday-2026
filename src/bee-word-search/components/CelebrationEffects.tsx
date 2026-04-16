@@ -55,7 +55,39 @@ function DiscoLamp({ position }: { position: "left" | "right" }) {
   );
 }
 
-export function CelebrationEffects() {
+function SwayingSpotlights() {
+  return (
+    <div className="jackpot-disco-rig absolute inset-0 overflow-hidden" aria-hidden>
+      {[8, 24, 40, 56, 72, 88].map((left, i) => {
+        const delay = `${i * 0.26}s`;
+        return (
+          <div
+            key={i}
+            className="jackpot-spotlight-beam"
+            style={{
+              left: `${left}%`,
+              animationDelay: delay,
+            }}
+          >
+            <div
+              className="jackpot-spotlight-core"
+              style={{ animationDelay: delay }}
+            />
+          </div>
+        );
+      })}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_56%_60%_at_50%_38%,rgba(255,248,220,0.22)_0%,rgba(255,223,128,0.08)_45%,rgba(255,255,255,0)_100%)]" />
+    </div>
+  );
+}
+
+export function CelebrationEffects({
+  showLights = true,
+  intensity = "intense",
+}: {
+  showLights?: boolean;
+  intensity?: "intense" | "subtle";
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -67,26 +99,67 @@ export function CelebrationEffects() {
       useWorker: true,
     });
 
-    const fire = () => {
+    const fireBurst = (x: number, y: number) => {
+      const isSubtle = intensity === "subtle";
       myConfetti({
-        particleCount: 25,
-        spread: 60,
-        origin: { x: Math.random(), y: Math.random() - 0.2 },
-        colors: ["#fbbf24", "#fb923c", "#6ee7ff", "#f472b6", "#ffffff"],
+        particleCount: isSubtle ? 40 : 50 + Math.floor(Math.random() * 50),
+        spread: isSubtle ? 60 : 80,
+        origin: { x, y },
+        colors: [
+          "#fbbf24",
+          "#fb923c",
+          "#6ee7ff",
+          "#f472b6",
+          "#ffffff",
+          "#FFD700",
+        ],
+        gravity: 1,
+        scalar: isSubtle ? 0.9 : 1,
+        ticks: isSubtle ? 180 : 200,
       });
     };
 
-    const interval = setInterval(fire, 1000);
-    fire();
+    const run = () => {
+      if (intensity === "subtle") {
+        fireBurst(Math.random() * 0.4 + 0.3, 0.4);
+        return;
+      }
+
+      // Intense mode
+      fireBurst(0.15, 0.5);
+      fireBurst(0.5, 0.4);
+      fireBurst(0.85, 0.5);
+
+      // Occasional massive center burst
+      if (Math.random() > 0.4) {
+        myConfetti({
+          particleCount: 150,
+          spread: 180,
+          origin: { x: 0.5, y: 0.7 },
+          colors: ["#FFD700", "#FFFFFF"],
+          scalar: 1.5,
+        });
+      }
+    };
+
+    const interval = setInterval(run, intensity === "subtle" ? 900 : 700);
+    run();
 
     return () => clearInterval(interval);
-  }, []);
+  }, [intensity]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-      {/* Disco Lamps */}
-      <DiscoLamp position="left" />
-      <DiscoLamp position="right" />
+      {showLights && (
+        <>
+          {/* Swaying Spotlights from 10s Game */}
+          <SwayingSpotlights />
+
+          {/* Disco Lamps */}
+          <DiscoLamp position="left" />
+          <DiscoLamp position="right" />
+        </>
+      )}
 
       {/* Confetti Canvas */}
       <canvas ref={canvasRef} className="w-full h-full" />

@@ -382,6 +382,9 @@ export function GiftWinModal({
   return (
     <Modal
       isOpen={isOpen}
+      backgroundEffects={
+        isOpen && <CelebrationEffects showLights={false} intensity="subtle" />
+      }
       icon={getGiftImage()}
       title={isLastTurn ? "Nhân phẩm vô cực!" : "Chốt quà thành công!"}
       isLarge={true}

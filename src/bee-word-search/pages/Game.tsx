@@ -22,21 +22,48 @@ const MAX_TURNS = 4;
 let sessionGamesPlayed = 0;
 
 function generateInitialCells(canShowKozocom: boolean): CellData[] {
-  const showKozocom = canShowKozocom && Math.random() < 0.5;
-  const isExtraZo = Math.random() < 0.5;
+  const showKozocom = canShowKozocom && Math.random() < 0.7;
 
-  const contents = [
-    { type: "letter", content: "Com" },
-    ...Array(9).fill({ type: "letter", content: "Ko" }),
-    { type: "letter", content: showKozocom ? "Kozocom" : "Ko" },
-    ...Array(isExtraZo ? 8 : 9).fill({ type: "letter", content: "Com" }),
-    ...Array(isExtraZo ? 3 : 2).fill({ type: "letter", content: "Zo" }),
-    { type: "gift", content: "gift-1" },
-    { type: "gift", content: "gift-2" },
-    { type: "gift", content: "gift-3" },
-    { type: "gift", content: "gift-4" },
-    ...Array(3).fill({ type: "boom", content: "💣" }),
-  ];
+  const allLetters = ["Ko", "Zo", "Com"];
+  const rareIndex = Math.floor(Math.random() * 3);
+  const rareLetter = allLetters[rareIndex];
+  const commonLetters = allLetters.filter((l) => l !== rareLetter);
+
+  // 50/50 chance for rare letter to appear
+  const showRare = Math.random() < 0.5;
+  const rareCount = showRare ? 1 : 0;
+
+  const contents: { type: string; content: string }[] = [];
+
+  // Special slot (Kozocom or a common letter)
+  contents.push({
+    type: "letter",
+    content: showKozocom ? "Kozocom" : commonLetters[0],
+  });
+
+  // Rare letter (0 or 1)
+  if (rareCount > 0) {
+    contents.push({ type: "letter", content: rareLetter });
+  }
+
+  // Fill remaining slots (20 - rareCount) with common letters evenly
+  const remainingLetterSlots = 20 - rareCount;
+  const half = Math.floor(remainingLetterSlots / 2);
+  for (let i = 0; i < half; i++) {
+    contents.push({ type: "letter", content: commonLetters[0] });
+  }
+  for (let i = 0; i < remainingLetterSlots - half; i++) {
+    contents.push({ type: "letter", content: commonLetters[1] });
+  }
+
+  // Fixed items (4 gifts, 4 bombs)
+  contents.push({ type: "gift", content: "gift-1" });
+  contents.push({ type: "gift", content: "gift-2" });
+  contents.push({ type: "gift", content: "gift-3" });
+  contents.push({ type: "gift", content: "gift-4" });
+  for (let i = 0; i < 4; i++) {
+    contents.push({ type: "boom", content: "💣" });
+  }
 
   const shuffled = [...contents].sort(() => Math.random() - 0.5);
 
@@ -141,6 +168,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
         setWinType("word");
         if (hasKozocom) {
           setGameStatus("won");
+          sessionGamesPlayed = 10;
           audio.playWin();
         } else {
           setIsMerging(true);
@@ -375,6 +403,7 @@ export function Game({ isMuted, toggleMute }: GameProps) {
           onComplete={() => {
             setIsMerging(false);
             setGameStatus("won");
+            sessionGamesPlayed = 10;
             audio.playWin();
           }}
         />
