@@ -8,10 +8,10 @@ const MotionDiv = motion.div;
 /** Slot-window position inside the border-spin.svg viewBox (582x582) */
 const VB = 582;
 const SLOT = {
-  left: 213 / VB,
-  width: 96 / VB,
-  top: 195 / VB,
-  height: 240 / VB,
+  left: 200 / VB,
+  width: 120 / VB,
+  top: 160 / VB,
+  height: 295 / VB,
 };
 
 // ── Casino animation constants ────────────────────────────────────────────────
@@ -27,20 +27,21 @@ const SLOT = {
  * TOTAL_ROTATIONS = ACCEL + CRUISE + DECEL — must stay a multiple so that
  * strip[finalRowIndex] % digitCount === safeTargetValue.
  */
-const ACCEL_ROTATIONS = 3; // Phase 2: slow → full speed
-const CRUISE_ROTATIONS = 12; // Phase 3: constant full speed
-const DECEL_ROTATIONS = 3; // Phase 4: full speed → slow
-const TOTAL_ROTATIONS = ACCEL_ROTATIONS + CRUISE_ROTATIONS + DECEL_ROTATIONS; // 18
+const ACCEL_ROTATIONS = 4; // Phase 2: slow → full speed
+const CRUISE_ROTATIONS = 22; // Phase 3: constant full speed
+const DECEL_ROTATIONS = 4; // Phase 4: full speed → slow
+const TOTAL_ROTATIONS = ACCEL_ROTATIONS + CRUISE_ROTATIONS + DECEL_ROTATIONS; // 30
 
 const TICK_STEPS = 9; // Phase 5: discrete individual ticks
 const OVERSHOOT_STEPS = 2; // Phase 6: rows to bounce past target
 
-const ACCEL_PHASE_SEC = 1.6; // Phase 2 duration
-const CRUISE_PHASE_SEC = 2.4; // Phase 3 duration
-const DECEL_PHASE_SEC = 2.0; // Phase 4 duration
-const TICK_BASE_DELAY_MS = 80; // pause before first tick
-const TICK_INCREMENT_MS = 40; // each tick waits this much longer
-const TICK_STEP_SEC = 0.055; // single tick animation duration
+// Total spin ≈ 2.2 + 6.5 + 2.8 + ~2.8 (ticks) + ~0.7 (spring) ≈ 15 s
+const ACCEL_PHASE_SEC = 2.2; // Phase 2 duration
+const CRUISE_PHASE_SEC = 6.5; // Phase 3 duration
+const DECEL_PHASE_SEC = 2.8; // Phase 4 duration
+const TICK_BASE_DELAY_MS = 55; // pause before first tick
+const TICK_INCREMENT_MS = 38; // each tick waits this much longer
+const TICK_STEP_SEC = 0.13; // single tick animation duration
 
 const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 
@@ -243,7 +244,7 @@ export default function VerticalReel({
 
         const tick = animate(yMotion, tickYs[i], {
           duration: TICK_STEP_SEC,
-          ease: [0.2, 0, 0.6, 1],
+          ease: [0.33, 0, 0.66, 1],
         });
         stoppers.push(() => tick.stop());
         onTickRef.current?.();
@@ -261,10 +262,10 @@ export default function VerticalReel({
 
       const spring = animate(yMotion, fY, {
         type: "spring",
-        stiffness: 340,
-        damping: 20,
+        stiffness: 280,
+        damping: 38,
         mass: 1.0,
-        velocity: -(rowH * OVERSHOOT_STEPS * 18), // ~proportional to row size
+        velocity: -(rowH * OVERSHOOT_STEPS * 6),
       });
       stoppers.push(() => spring.stop());
       await spring;
@@ -296,7 +297,7 @@ export default function VerticalReel({
     : "h-[1000px] w-[720px] md:w-[820px]";
 
   const fontSize = compact
-    ? "clamp(124px, 24vw, 176px)"
+    ? "clamp(124px, 24vw, 230px)"
     : "clamp(152px, 22vw, 216px)";
 
   const shellStyle = {
@@ -314,16 +315,14 @@ export default function VerticalReel({
   };
 
   return (
-    <div className="relative -top-[150px] -left-[20px] shrink-0">
+    <div className="relative -top-[55px] -left-[20px] shrink-0">
       {/* Shake wrapper — brief x/y shake when the reel locks in */}
       <MotionDiv
         key={`shake-${shakeKey}`}
         animate={
-          shakeKey > 0
-            ? { x: [0, -6, 7, -5, 4, -2, 1, 0], y: [0, 1, -2, 2, -1, 1, 0] }
-            : {}
+          shakeKey > 0 ? { x: [0, -3, 3, -2, 1, 0], y: [0, 1, -1, 1, 0] } : {}
         }
-        transition={{ duration: 0.38, ease: "easeOut" }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
       >
         <div
           className={`relative overflow-hidden rounded-[2px] ${frameClass}`}

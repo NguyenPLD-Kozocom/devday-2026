@@ -513,7 +513,7 @@ export default function SlotMachine({
               className="relative flex items-center justify-center"
               initial={{ scale: 1 }}
               animate={{
-                scale: [1, 1.68, 0.36],
+                scale: [1, 1.68, 1],
               }}
               transition={{
                 duration: FLY_DIGIT_DURATION_SEC,
@@ -579,18 +579,19 @@ export default function SlotMachine({
               translateY: "-50%",
               fontFamily: "'Oswald', sans-serif",
               fontWeight: 900,
-              fontSize: compact
-                ? "clamp(34px, 7vw, 50px)"
-                : "clamp(46px, 6vw, 74px)",
+              fontSize: REEL_DIGIT_FONT_SIZE(compact),
               color: "#ffffff",
               textShadow:
                 "0 0 10px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)",
               WebkitTextStroke: "2px #1d4ed8",
             }}
-            initial={{ scale: 1.38, opacity: 1 }}
-            animate={{ scale: 0.68, opacity: 1 }}
-            exit={{ opacity: 1, transition: { duration: 0 } }}
-            transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
+            transition={{
+              duration: 0.5,
+              ease: "easeOut",
+            }}
           >
             {landedPulse.digit}
           </MotionDiv>
