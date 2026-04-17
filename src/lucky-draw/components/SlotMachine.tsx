@@ -12,6 +12,7 @@ import spinSfx1Url from "../assets/spin-1.mp4";
 import spinSfx2Url from "../assets/spin-2.mp4";
 import spinSfx3Url from "../assets/spin-3.mp3";
 import tadaSfxUrl from "../assets/tada.mp3";
+import wheelSpinningSfxUrl from "../assets/wheel-spinning.wav";
 import { useSfxOverlayWhile, useSoundSettings } from "../SoundSettingsContext";
 import {
   getLuckyDrawBoardDigitStyle,
@@ -114,6 +115,7 @@ export default function SlotMachine({
   const flyPayloadRef = useRef<FlyPosPayload | null>(null);
   const spinAudioRef = useRef<HTMLAudioElement | null>(null);
   const tadaAudioRef = useRef<HTMLAudioElement | null>(null);
+  const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const tadaPlayedForFlyKeyRef = useRef<string | null>(null);
   const { soundEnabled } = useSoundSettings();
   useSfxOverlayWhile(phase === "spinning" && soundEnabled);
@@ -133,6 +135,11 @@ export default function SlotMachine({
       if (t) {
         t.pause();
         t.currentTime = 0;
+      }
+      const w = tickAudioRef.current;
+      if (w) {
+        w.pause();
+        w.currentTime = 0;
       }
     };
   }, []);
@@ -160,6 +167,11 @@ export default function SlotMachine({
     if (!a) return;
     a.pause();
     a.currentTime = 0;
+    const w = tickAudioRef.current;
+    if (w) {
+      w.pause();
+      w.currentTime = 0;
+    }
   }, [phase]);
 
   useEffect(() => {
@@ -169,6 +181,13 @@ export default function SlotMachine({
       void a.play().catch(() => {});
     } else {
       a.pause();
+    }
+    const w = tickAudioRef.current;
+    if (!w) return;
+    if (soundEnabled && phase === "spinning") {
+      void w.play().catch(() => {});
+    } else {
+      w.pause();
     }
   }, [soundEnabled, phase]);
 
@@ -363,6 +382,18 @@ export default function SlotMachine({
     spin.currentTime = 0;
     if (soundEnabled) {
       void spin.play().catch(() => {});
+    }
+
+    // Start wheel-spinning sound looping in parallel with the BGM
+    if (!tickAudioRef.current) {
+      const wheel = new Audio(wheelSpinningSfxUrl);
+      wheel.loop = true;
+      tickAudioRef.current = wheel;
+    }
+    const wheel = tickAudioRef.current;
+    wheel.currentTime = 0;
+    if (soundEnabled) {
+      void wheel.play().catch(() => {});
     }
   }, [phase, board, idleDigit, soundEnabled, safeMaxSpinDigit, resultTier]);
 

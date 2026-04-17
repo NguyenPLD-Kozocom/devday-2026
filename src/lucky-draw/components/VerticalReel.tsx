@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import borderSpin from "../assets/border-spin.svg";
 import Lever from "./Lever";
 
 const MotionDiv = motion.div;
 
-/** Tọa độ ô hiển thị số trong viewBox 582×582 của border-spin.svg (khe dọc giữa, giữa hai vùng gradient) */
+/** Slot-window position inside the border-spin.svg viewBox (582x582) */
 const VB = 582;
 const SLOT = {
   left: 213 / VB,
@@ -14,37 +14,35 @@ const SLOT = {
   height: 240 / VB,
 };
 
-/** Số vòng 0–9 (đủ dài, không kéo quá lâu) */
-const FULL_ROTATIONS = 8;
-const SPIN_DURATION_SEC = 13;
-
+// ── Casino animation constants ────────────────────────────────────────────────
 /**
- * Một đường cong duy nhất: p(t) = tích phân chuẩn từ v(t) ∝ t^a·(1−t)^b.
- * → tốc độ p'(t) chỉ có một đỉnh (tăng rồi giảm dần đến 0), không có “khúc” chậm rồi nhanh lại.
+ * Strip is divided into 5 animation phases (row counts with digitCount = 10):
+ *
+ *  Phase 2  ACCEL  : ACCEL_ROTATIONS  × digitCount =  30 rows  (ease-in)
+ *  Phase 3  CRUISE : CRUISE_ROTATIONS × digitCount = 120 rows  (linear, full speed)
+ *  Phase 4  DECEL  : DECEL_ROTATIONS  × digitCount =  30 rows  (ease-out)
+ *  Phase 5  TICK   : TICK_STEPS rows                =   9 rows  (discrete steps)
+ *  Phase 6  OSHOT  : OVERSHOOT_STEPS rows → spring back
+ *
+ * TOTAL_ROTATIONS = ACCEL + CRUISE + DECEL — must stay a multiple so that
+ * strip[finalRowIndex] % digitCount === safeTargetValue.
  */
-const createSpinEase = () => {
-  const a = 2.05;
-  const b = 4.25;
-  const STEPS = 384;
-  const cumulative = new Float64Array(STEPS + 1);
-  cumulative[0] = 0;
-  for (let i = 0; i < STEPS; i++) {
-    const t = (i + 0.5) / STEPS;
-    const v = Math.pow(t, a) * Math.pow(1 - t, b);
-    cumulative[i + 1] = cumulative[i] + v / STEPS;
-  }
-  const total = cumulative[STEPS];
-  for (let i = 0; i <= STEPS; i++) cumulative[i] /= total;
-  return (rawT: number) => {
-    const t = Math.max(0, Math.min(1, rawT));
-    const pos = t * STEPS;
-    const i = Math.min(Math.floor(pos), STEPS - 1);
-    const f = pos - i;
-    return cumulative[i] * (1 - f) + cumulative[i + 1] * f;
-  };
-};
+const ACCEL_ROTATIONS = 3; // Phase 2: slow → full speed
+const CRUISE_ROTATIONS = 12; // Phase 3: constant full speed
+const DECEL_ROTATIONS = 3; // Phase 4: full speed → slow
+const TOTAL_ROTATIONS = ACCEL_ROTATIONS + CRUISE_ROTATIONS + DECEL_ROTATIONS; // 18
 
-const SPIN_EASE = createSpinEase();
+const TICK_STEPS = 9; // Phase 5: discrete individual ticks
+const OVERSHOOT_STEPS = 2; // Phase 6: rows to bounce past target
+
+const ACCEL_PHASE_SEC = 1.6; // Phase 2 duration
+const CRUISE_PHASE_SEC = 2.4; // Phase 3 duration
+const DECEL_PHASE_SEC = 2.0; // Phase 4 duration
+const TICK_BASE_DELAY_MS = 80; // pause before first tick
+const TICK_INCREMENT_MS = 40; // each tick waits this much longer
+const TICK_STEP_SEC = 0.055; // single tick animation duration
+
+const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 
 export type VerticalReelMode = "idle" | "spinning" | "locked";
 
@@ -55,19 +53,28 @@ export type VerticalReelProps = {
   maxDigit?: number;
   compact?: boolean;
   idleValue?: number;
-  /** Số đang hiển thị lúc kéo (từ parent, chụp trước setIdleDigit). Ưu tiên hơn idleValue khi quay. */
+  /** Currently-displayed digit captured just before the spin (parent). */
   spinFromDigit?: number | null;
-  /** Ẩn số giữa khe khi overlay bay (chỉ còn một số bay, không trùng hai số) */
+  /** Hide the center digit while the fly-out overlay is shown. */
   hideCenterDigit?: boolean;
-  /** Khi idle: ô giữa trống (sau khi số đã bay đi); false = hiện đủ số (init / game mới) */
+  /** Idle center slot appears empty (after a digit has flown out). */
   idleCenterEmpty?: boolean;
   onPull?: () => void;
   pullDisabled?: boolean;
   onSpinComplete?: () => void;
+  /** Called on every Phase-3 tick — use to trigger a tick sound. */
+  onTick?: () => void;
 };
 
 /**
- * Khung quay: chỉ dùng border-spin.svg làm nền (viền có sẵn trong asset), số nằm trong ô cửa sổ.
+ * VerticalReel — Casino slot machine with 4-phase animation.
+ *
+ *  Phase 1  FAST SPIN  — accelerate to full speed + motion blur
+ *  Phase 2  SLOW DOWN  — ease-out-cubic deceleration, blur fades to clear
+ *  Phase 3  TICKING    — discrete step-by-step with growing pauses
+ *                        (80 ms → 120 ms → 160 ms … feels like a real click-wheel)
+ *  Phase 4  OVERSHOOT  — lunges 1 digit past target, spring-bounces back
+ *                        ("clunk" lock-in)
  */
 export default function VerticalReel({
   targetValue,
@@ -82,10 +89,14 @@ export default function VerticalReel({
   onPull,
   pullDisabled = false,
   onSpinComplete,
+  onTick,
 }: VerticalReelProps) {
   const digitCount = Math.max(1, Math.min(10, maxDigit + 1));
   const rowsPerRotation = digitCount;
-  const rowsTravel = FULL_ROTATIONS * rowsPerRotation;
+
+  // rowsTravel must be a multiple of digitCount
+  const rowsTravel = TOTAL_ROTATIONS * rowsPerRotation;
+
   const spinCycles = Math.ceil(
     (rowsTravel * 2 + (digitCount * 2 - 1)) / rowsPerRotation,
   );
@@ -93,13 +104,16 @@ export default function VerticalReel({
     { length: spinCycles * digitCount },
     (_, i) => i % digitCount,
   );
-  /** Đích */
+
   const safeTargetValue = Math.max(0, Math.min(maxDigit, targetValue));
   const finalRowIndex = rowsTravel + safeTargetValue;
-  /**
-   * Chiều từ trên xuống: translateY tăng dần (từ âm hơn → ít âm hơn) → bắt đầu ở hàng chỉ số lớn, về đích nhỏ hơn.
-   * Căn modulo 10 để ô đầu vẫn hiển thị đúng số lúc kéo (startDigit).
-   */
+
+  // Phase boundary row indices (high → low as the reel scrolls)
+  const tickSteps = Math.min(TICK_STEPS, digitCount - 1);
+  const decelEndRowIndex = finalRowIndex + tickSteps; // end of decel / start of ticks
+  const cruiseEndRowIndex = decelEndRowIndex + DECEL_ROTATIONS * digitCount; // end of cruise / start of decel
+  const accelEndRowIndex = cruiseEndRowIndex + CRUISE_ROTATIONS * digitCount; // end of accel / start of cruise
+
   const startDigit =
     spinFromDigit !== null && spinFromDigit !== undefined
       ? spinFromDigit
@@ -108,6 +122,8 @@ export default function VerticalReel({
   const digitAlign =
     (safeStartDigit - safeTargetValue + digitCount) % digitCount;
   const initialRowIndex = finalRowIndex + rowsTravel + digitAlign;
+
+  // Static strip for idle / locked rendering
   const staticCycles = 3;
   const staticStrip = Array.from(
     { length: staticCycles * digitCount },
@@ -119,6 +135,7 @@ export default function VerticalReel({
       : safeTargetValue;
   const staticTargetRowIndex = digitCount + staticValue;
 
+  // ── Slot-window measurements ───────────────────────────────────────────────
   const slotRef = useRef<HTMLDivElement | null>(null);
   const [slotH, setSlotH] = useState(48);
   const [rowH, setRowH] = useState(28.8);
@@ -130,7 +147,6 @@ export default function VerticalReel({
       const h = el.clientHeight;
       if (h > 0) {
         setSlotH(h);
-        // Tăng phần hiển thị số trên/dưới để tiệm cận tỷ lệ trong ảnh mẫu
         setRowH(h * 0.48);
       }
     };
@@ -141,16 +157,140 @@ export default function VerticalReel({
   }, []);
 
   const centerOffset = (slotH - rowH) / 2;
-  const initialY = -initialRowIndex * rowH + centerOffset;
-  const finalY = -finalRowIndex * rowH + centerOffset;
-  const travelDelta = finalY - initialY;
-  const spinTransition =
-    travelDelta === 0
-      ? { duration: 0 }
-      : {
-          duration: SPIN_DURATION_SEC,
-          ease: SPIN_EASE,
-        };
+
+  // ── Motion values ──────────────────────────────────────────────────────────
+  const yMotion = useMotionValue(0);
+  const blurMotion = useMotionValue(0);
+  const filterStyle = useTransform(
+    blurMotion,
+    (v) => `blur(${v.toFixed(2)}px)`,
+  );
+
+  // Triggers the shake animation exactly once per lock-in
+  const [shakeKey, setShakeKey] = useState(0);
+
+  // Stable callback refs — avoid restarting the effect on re-render
+  const onSpinCompleteRef = useRef(onSpinComplete);
+  const onTickRef = useRef(onTick);
+  useEffect(() => {
+    onSpinCompleteRef.current = onSpinComplete;
+  }, [onSpinComplete]);
+  useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
+
+  // ── 7-Phase Animation ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (mode !== "spinning") return;
+    if (rowH <= 0) return;
+
+    const co = centerOffset;
+    const toY = (rowIdx: number) => -rowIdx * rowH + co;
+
+    //  Phase markers (all row-index → Y conversions)
+    const iY = toY(initialRowIndex); // Phase 1: start (snap)
+    const aeY = toY(accelEndRowIndex); // Phase 2→3 boundary
+    const ceY = toY(cruiseEndRowIndex); // Phase 3→4 boundary
+    const deY = toY(decelEndRowIndex); // Phase 4→5 boundary
+    const fY = toY(finalRowIndex); // exact target
+
+    // Discrete tick Y-positions (decelEndRowIndex → finalRowIndex step by step)
+    const tickYs: number[] = [];
+    for (let s = tickSteps - 1; s >= 0; s--) {
+      tickYs.push(toY(finalRowIndex + s));
+    }
+
+    yMotion.set(iY);
+    blurMotion.set(0);
+
+    let cancelled = false;
+    const stoppers: Array<() => void> = [];
+
+    const run = async () => {
+      // ── Phase 2: ACCELERATE ──────────────────────────────────────────────
+      const accel = animate(yMotion, aeY, {
+        duration: ACCEL_PHASE_SEC,
+        ease: [0.42, 0, 1, 1], // easeInQuad — gentle ramp up
+      });
+      stoppers.push(() => accel.stop());
+      await accel;
+      if (cancelled) return;
+
+      // ── Phase 3: CRUISE (full speed linear) ─────────────────────────────
+      const cruise = animate(yMotion, ceY, {
+        duration: CRUISE_PHASE_SEC,
+        ease: "linear",
+      });
+      stoppers.push(() => cruise.stop());
+      await cruise;
+      if (cancelled) return;
+
+      // ── Phase 4: DECELERATE ──────────────────────────────────────────────
+      const decel = animate(yMotion, deY, {
+        duration: DECEL_PHASE_SEC,
+        ease: [0, 0, 0.3, 1], // easeOutCubic — smooth brake
+      });
+      stoppers.push(() => decel.stop());
+      await decel;
+      if (cancelled) return;
+
+      // ── Phase 5: TICK TICK TICK ──────────────────────────────────────────
+      // discrete step-by-step; each pause grows longer (click-wheel feel)
+      for (let i = 0; i < tickYs.length; i++) {
+        const delayMs = TICK_BASE_DELAY_MS + i * TICK_INCREMENT_MS;
+        await sleep(delayMs);
+        if (cancelled) return;
+
+        const tick = animate(yMotion, tickYs[i], {
+          duration: TICK_STEP_SEC,
+          ease: [0.2, 0, 0.6, 1],
+        });
+        stoppers.push(() => tick.stop());
+        onTickRef.current?.();
+        await tick;
+        if (cancelled) return;
+      }
+
+      // ── Phase 6 + 7: OVERSHOOT → SPRING LOCK ───────────────────────────
+      // A single spring with negative initial velocity naturally shoots past
+      // the target then springs back — no hard cut between two phases.
+      // velocity is in px/s; negative = continuing in the scroll direction
+      // (further up), so the spring overshoots then settles on fY.
+      await sleep(60);
+      if (cancelled) return;
+
+      const spring = animate(yMotion, fY, {
+        type: "spring",
+        stiffness: 340,
+        damping: 20,
+        mass: 1.0,
+        velocity: -(rowH * OVERSHOOT_STEPS * 18), // ~proportional to row size
+      });
+      stoppers.push(() => spring.stop());
+      await spring;
+      if (cancelled) return;
+
+      setShakeKey((k) => k + 1);
+      onSpinCompleteRef.current?.();
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+      stoppers.forEach((s) => s());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spinKey, mode, rowH]);
+
+  // Sync idle / locked position (no animation needed)
+  useEffect(() => {
+    if (mode === "spinning") return;
+    const co = (slotH - rowH) / 2;
+    yMotion.set(-(staticTargetRowIndex * rowH) + co);
+    blurMotion.set(0);
+  }, [mode, slotH, rowH, staticTargetRowIndex, yMotion, blurMotion]);
+
+  // ── Styling helpers ────────────────────────────────────────────────────────
   const frameClass = compact
     ? "h-[min(90vw,950px)] w-[min(90vw,620px)] max-h-[950px] max-w-[620px]"
     : "h-[1000px] w-[720px] md:w-[820px]";
@@ -175,46 +315,150 @@ export default function VerticalReel({
 
   return (
     <div className="relative -top-[150px] -left-[20px] shrink-0">
-      <div
-        className={`relative overflow-hidden rounded-[2px] ${frameClass}`}
-        style={shellStyle}
+      {/* Shake wrapper — brief x/y shake when the reel locks in */}
+      <MotionDiv
+        key={`shake-${shakeKey}`}
+        animate={
+          shakeKey > 0
+            ? { x: [0, -6, 7, -5, 4, -2, 1, 0], y: [0, 1, -2, 2, -1, 1, 0] }
+            : {}
+        }
+        transition={{ duration: 0.38, ease: "easeOut" }}
       >
         <div
-          ref={slotRef}
-          className="absolute z-10 flex items-center justify-center overflow-hidden"
-          style={slotStyle}
+          className={`relative overflow-hidden rounded-[2px] ${frameClass}`}
+          style={shellStyle}
         >
-          {(mode === "idle" || mode === "locked") && (
-            <div className="relative z-10 h-full w-full overflow-hidden">
-              <div
-                className="will-change-transform"
-                style={{
-                  transform: `translateY(${-(staticTargetRowIndex * rowH) + centerOffset}px)`,
-                }}
-              >
-                {staticStrip.map((d, i) => {
-                  const isCenter = i === staticTargetRowIndex;
-                  /** Idle: ô giữa trống khi parent yêu cầu (sau khi số đã bay) */
-                  const isIdleEmptyCenter =
-                    mode === "idle" && idleCenterEmpty && isCenter;
-                  const showReelDigitForMeasure =
-                    isCenter && mode === "locked" && !hideCenterDigit;
-                  return (
+          <div
+            ref={slotRef}
+            className="absolute z-10 flex items-center justify-center overflow-hidden"
+            style={slotStyle}
+          >
+            {/* ── IDLE / LOCKED ──────────────────────────────────────────── */}
+            {(mode === "idle" || mode === "locked") && (
+              <div className="relative z-10 h-full w-full overflow-hidden">
+                <div
+                  className="will-change-transform"
+                  style={{
+                    transform: `translateY(${-(staticTargetRowIndex * rowH) + centerOffset}px)`,
+                  }}
+                >
+                  {staticStrip.map((d, i) => {
+                    const isCenter = i === staticTargetRowIndex;
+                    const isIdleEmptyCenter =
+                      mode === "idle" && idleCenterEmpty && isCenter;
+                    const showReelDigitForMeasure =
+                      isCenter && mode === "locked" && !hideCenterDigit;
+
+                    return (
+                      <div
+                        key={`static-${i}`}
+                        className="flex items-center justify-center"
+                        style={{ height: rowH }}
+                      >
+                        {/* Pulsing glow only on the locked center digit */}
+                        {isCenter && mode === "locked" && !isIdleEmptyCenter ? (
+                          <MotionDiv
+                            data-reel-digit={
+                              showReelDigitForMeasure ? true : undefined
+                            }
+                            className="select-none leading-none"
+                            aria-hidden={hideCenterDigit ? true : undefined}
+                            animate={{
+                              textShadow: [
+                                "0 0 8px rgba(59,130,246,0.5), 0 0 18px rgba(59,130,246,0.3), 0 1px 0 rgba(0,0,0,0.28)",
+                                "0 0 18px rgba(100,200,255,0.95), 0 0 36px rgba(59,130,246,0.75), 0 0 52px rgba(59,130,246,0.4), 0 1px 0 rgba(0,0,0,0.28)",
+                                "0 0 8px rgba(59,130,246,0.5), 0 0 18px rgba(59,130,246,0.3), 0 1px 0 rgba(0,0,0,0.28)",
+                              ],
+                            }}
+                            transition={{
+                              duration: 1.4,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            }}
+                            style={{
+                              display: "block",
+                              fontFamily: "'Oswald', sans-serif",
+                              fontSize,
+                              fontWeight: 700,
+                              lineHeight: 1,
+                              letterSpacing: "0.01em",
+                              fontVariantNumeric: "tabular-nums",
+                              color: "#ffffff",
+                              opacity: hideCenterDigit ? 0 : 1,
+                              WebkitTextStroke: "2px #1d4ed8",
+                            }}
+                          >
+                            {d}
+                          </MotionDiv>
+                        ) : (
+                          <span
+                            data-reel-digit={
+                              showReelDigitForMeasure ? true : undefined
+                            }
+                            className="select-none leading-none"
+                            aria-hidden={
+                              (hideCenterDigit && isCenter) || isIdleEmptyCenter
+                                ? true
+                                : undefined
+                            }
+                            style={{
+                              fontFamily: "'Oswald', sans-serif",
+                              fontSize,
+                              fontWeight: 700,
+                              lineHeight: 1,
+                              letterSpacing: "0.01em",
+                              fontVariantNumeric: "tabular-nums",
+                              color: "#ffffff",
+                              opacity: isIdleEmptyCenter
+                                ? 0
+                                : isCenter
+                                  ? hideCenterDigit
+                                    ? 0
+                                    : 1
+                                  : 0.72,
+                              textShadow: isCenter
+                                ? "0 0 8px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)"
+                                : "0 0 4px rgba(130,198,255,0.22)",
+                              WebkitTextStroke: "2px #1d4ed8",
+                              filter: isCenter ? "blur(0px)" : "blur(0.9px)",
+                            }}
+                          >
+                            {isIdleEmptyCenter ? "\u00a0" : d}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── SPINNING: driven by useMotionValue ─────────────────────── */}
+            {mode === "spinning" && (
+              <div className="relative z-10 h-full w-full overflow-hidden">
+                {/* Top/bottom vignette fade */}
+                <div
+                  className="pointer-events-none absolute inset-0 z-20"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, rgba(0,40,90,0.42) 0%, transparent 22%, transparent 78%, rgba(0,40,90,0.42) 100%)",
+                  }}
+                  aria-hidden
+                />
+                <motion.div
+                  key={spinKey}
+                  className="will-change-transform"
+                  style={{ y: yMotion, filter: filterStyle }}
+                >
+                  {strip.map((d, i) => (
                     <div
-                      key={`static-${i}`}
+                      key={`${spinKey}-${i}`}
                       className="flex items-center justify-center"
                       style={{ height: rowH }}
                     >
                       <span
-                        data-reel-digit={
-                          showReelDigitForMeasure ? true : undefined
-                        }
                         className="select-none leading-none"
-                        aria-hidden={
-                          (hideCenterDigit && isCenter) || isIdleEmptyCenter
-                            ? true
-                            : undefined
-                        }
                         style={{
                           fontFamily: "'Oswald', sans-serif",
                           fontSize,
@@ -223,78 +467,22 @@ export default function VerticalReel({
                           letterSpacing: "0.01em",
                           fontVariantNumeric: "tabular-nums",
                           color: "#ffffff",
-                          opacity: isIdleEmptyCenter
-                            ? 0
-                            : isCenter
-                              ? hideCenterDigit
-                                ? 0
-                                : 1
-                              : 0.72,
-                          textShadow: isCenter
-                            ? "0 0 8px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)"
-                            : "0 0 4px rgba(130,198,255,0.22)",
+                          opacity: 0.9,
+                          textShadow:
+                            "0 0 10px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)",
                           WebkitTextStroke: "2px #1d4ed8",
-                          filter: isCenter ? "blur(0px)" : "blur(0.9px)",
                         }}
                       >
-                        {isIdleEmptyCenter ? "\u00a0" : d}
+                        {d}
                       </span>
                     </div>
-                  );
-                })}
+                  ))}
+                </motion.div>
               </div>
-            </div>
-          )}
-
-          {mode === "spinning" && (
-            <div className="relative z-10 h-full w-full overflow-hidden">
-              <div
-                className="pointer-events-none absolute inset-0 z-20"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, rgba(0,40,90,0.42) 0%, transparent 22%, transparent 78%, rgba(0,40,90,0.42) 100%)",
-                }}
-                aria-hidden
-              />
-              <MotionDiv
-                key={spinKey}
-                className="will-change-transform"
-                initial={{ y: initialY }}
-                animate={{ y: finalY }}
-                transition={spinTransition}
-                onAnimationComplete={() => onSpinComplete?.()}
-              >
-                {strip.map((d, i) => (
-                  <div
-                    key={`${spinKey}-${i}`}
-                    className="flex items-center justify-center"
-                    style={{ height: rowH }}
-                  >
-                    <span
-                      className="select-none leading-none"
-                      style={{
-                        fontFamily: "'Oswald', sans-serif",
-                        fontSize,
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        letterSpacing: "0.01em",
-                        fontVariantNumeric: "tabular-nums",
-                        color: "#ffffff",
-                        opacity: 0.9,
-                        textShadow:
-                          "0 0 10px rgba(59,130,246,0.35), 0 1px 0 rgba(0,0,0,0.2)",
-                        WebkitTextStroke: "2px #1d4ed8",
-                      }}
-                    >
-                      {d}
-                    </span>
-                  </div>
-                ))}
-              </MotionDiv>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </MotionDiv>
 
       <div
         className={`absolute top-1/2 right-14 z-30 -translate-y-1/2 origin-right ${
