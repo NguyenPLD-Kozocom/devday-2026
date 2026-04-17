@@ -87,18 +87,18 @@ body,
 
 @keyframes jackpot-digit-settle-snap {
   0% {
-    transform: scale(1.55) translateY(-10px);
-    filter: brightness(3) drop-shadow(0 0 28px rgba(255, 220, 50, 1));
+    transform: scale(1.05) translateY(-3px);
+    filter: brightness(3) drop-shadow(0 0 18px rgba(255, 220, 50, 1));
   }
   50% {
-    transform: scale(0.88) translateY(5px);
-    filter: brightness(1.8) drop-shadow(0 0 14px rgba(255, 200, 0, 0.8));
+    transform: scale(0.95) translateY(1px);
+    filter: brightness(1.8) drop-shadow(0 0 10px rgba(255, 200, 0, 0.8));
   }
   72% {
-    transform: scale(1.08);
+    transform: scale(1.02);
   }
   88% {
-    transform: scale(0.97);
+    transform: scale(0.99);
   }
   100% {
     transform: scale(1) translateY(0);
@@ -119,11 +119,10 @@ body,
 }
 
 @keyframes jackpot-digit-roll {
-  0%   { transform: scale(1);    opacity: 1;   }
-  25%  { transform: scale(1.12); opacity: 0.6; }
-  50%  { transform: scale(0.9);  opacity: 0.8; }
-  75%  { transform: scale(1.10); opacity: 0.55;}
-  100% { transform: scale(1);    opacity: 1;   }
+  0%   { opacity: 1;    filter: blur(0px)   brightness(1); }
+  30%  { opacity: 0.45; filter: blur(1.5px) brightness(1.8); }
+  60%  { opacity: 0.75; filter: blur(0.5px) brightness(1.3); }
+  100% { opacity: 1;    filter: blur(0px)   brightness(1); }
 }
 
 @keyframes jackpot-shimmer-sweep {
@@ -189,12 +188,13 @@ body,
 .jackpot-digit-rolling span {
   display: inline-block;
   transform-origin: center center;
+  transform-box: fill-box;
   background: linear-gradient(to bottom, #ffffff, #c0c8e0);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  will-change: filter, opacity;
   animation: jackpot-digit-roll 0.12s ease-in-out infinite;
-  will-change: transform;
 }
 
 /* Chữ số đã khóa: màu vàng kim + snap bounce + glow pulse mãi */
@@ -204,13 +204,26 @@ body,
 }
 .jackpot-digit-settled span {
   display: inline-block;
+  transform-origin: center center;
+  transform-box: fill-box;
   background: linear-gradient(to bottom, #fffef5 0%, #fef08a 45%, #ca8a04 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-stroke: 1px rgba(180, 83, 9, 0.28);
+  will-change: transform, filter;
   animation:
     jackpot-digit-settle-snap 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
     jackpot-digit-glow-pulse 2.2s ease-in-out 0.45s infinite;
-  will-change: transform, filter;
+}
+
+/* Gold text for jackpot time display (no slot machine) */
+.jackpot-time-gold {
+  background: linear-gradient(to bottom, #fffef5 0%, #fef08a 45%, #ca8a04 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(180, 83, 9, 0.28);
+  filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.55));
+  animation: jackpot-digit-glow-pulse 2.2s ease-in-out infinite;
 }
