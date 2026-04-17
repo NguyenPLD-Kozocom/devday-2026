@@ -8,7 +8,7 @@ const MotionDiv = motion.div;
 /** Slot-window position inside the border-spin.svg viewBox (582x582) */
 const VB = 582;
 const SLOT = {
-  left: 200 / VB,
+  left: 203 / VB,
   width: 120 / VB,
   top: 160 / VB,
   height: 295 / VB,

@@ -589,8 +589,8 @@ export default function SlotMachine({
             animate={{ opacity: 0 }}
             exit={{ opacity: 0, transition: { duration: 0 } }}
             transition={{
-              duration: 0.5,
-              ease: "easeOut",
+              duration: 0.3,
+              ease: "easeIn",
             }}
           >
             {landedPulse.digit}
