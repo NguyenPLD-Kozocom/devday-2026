@@ -416,7 +416,7 @@ const CongratulationsBanner = ({ tier }: { tier: "jackpot" | "near" }) => {
           ))}
         </p>
       </div>
-      <p
+      {/* <p
         className={cn(
           "mt-1.5 font-main text-[clamp(0.65rem,1.8vw,0.9rem)] font-medium uppercase tracking-[0.28em]",
           tier === "jackpot"
@@ -426,7 +426,7 @@ const CongratulationsBanner = ({ tier }: { tier: "jackpot" | "near" }) => {
         aria-hidden
       >
         {"Ch\u00fac m\u1eebng b\u1ea1n"}
-      </p>
+      </p> */}
     </div>
   );
 };
@@ -919,7 +919,7 @@ function App() {
                         )}
                         <p
                           className={cn(
-                            "pb-6 text-center font-main text-3xl font-light leading-[0.87] [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]",
+                            "pb-2 text-center font-main text-[40px] font-light leading-[0.87] [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]",
                             prizeTier?.tier === "jackpot"
                               ? "bg-gradient-to-b from-amber-50 to-amber-200/90 bg-clip-text text-transparent"
                               : "text-white",
