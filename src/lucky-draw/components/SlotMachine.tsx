@@ -511,9 +511,9 @@ export default function SlotMachine({
           >
             <MotionDiv
               className="relative flex items-center justify-center"
-              initial={{ scale: 1 }}
+              initial={{ scale: 1.5 }}
               animate={{
-                scale: [1, 1.68, 1],
+                scale: [1.5, 1.68, 0.85],
               }}
               transition={{
                 duration: FLY_DIGIT_DURATION_SEC,

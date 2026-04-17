@@ -55,3 +55,162 @@ body,
 .animate-scaleIn {
   animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ── Jackpot time display ───────────────────────────────────────── */
+
+@keyframes jackpot-container-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+    filter: brightness(4) blur(12px);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.18);
+    filter: brightness(2.2) blur(0);
+  }
+  65% {
+    transform: scale(0.93);
+    filter: brightness(1.4);
+  }
+  80% {
+    transform: scale(1.06);
+  }
+  90% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes jackpot-digit-settle-snap {
+  0% {
+    transform: scale(1.55) translateY(-10px);
+    filter: brightness(3) drop-shadow(0 0 28px rgba(255, 220, 50, 1));
+  }
+  50% {
+    transform: scale(0.88) translateY(5px);
+    filter: brightness(1.8) drop-shadow(0 0 14px rgba(255, 200, 0, 0.8));
+  }
+  72% {
+    transform: scale(1.08);
+  }
+  88% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    filter: brightness(1);
+  }
+}
+
+@keyframes jackpot-digit-glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.7))
+            drop-shadow(0 0 22px rgba(250, 204, 21, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 22px rgba(255, 235, 60, 1))
+            drop-shadow(0 0 52px rgba(250, 204, 21, 0.85))
+            drop-shadow(0 0 95px rgba(255, 180, 0, 0.5));
+  }
+}
+
+@keyframes jackpot-digit-roll {
+  0%   { transform: scale(1);    opacity: 1;   }
+  25%  { transform: scale(1.12); opacity: 0.6; }
+  50%  { transform: scale(0.9);  opacity: 0.8; }
+  75%  { transform: scale(1.10); opacity: 0.55;}
+  100% { transform: scale(1);    opacity: 1;   }
+}
+
+@keyframes jackpot-shimmer-sweep {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 350% center;
+  }
+}
+
+@keyframes jackpot-flash-overlay {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+.jackpot-time-container {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  animation: jackpot-container-enter 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Dùng cho toàn bộ modal jackpot — chỉ animation, không đổi display/position */
+.jackpot-modal-enter {
+  animation: jackpot-container-enter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center center;
+}
+
+.jackpot-time-container::after {
+  content: '';
+  position: absolute;
+  inset: -10% -8%;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 220, 0.6) 50%,
+    rgba(255, 236, 100, 0.35) 55%,
+    transparent 68%
+  );
+  background-size: 250% 100%;
+  animation: jackpot-shimmer-sweep 2s ease-in-out 1.2s infinite;
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+/* flash trắng phủ lên toàn bộ modal khi jackpot xuất hiện */
+.jackpot-modal-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(255,240,180,0.7) 40%, transparent 75%);
+  animation: jackpot-flash-overlay 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* Chữ số đang quay: màu trắng xám */
+.jackpot-digit-rolling {
+  overflow: hidden;
+  position: relative;
+  line-height: 1;
+}
+.jackpot-digit-rolling span {
+  display: inline-block;
+  transform-origin: center center;
+  background: linear-gradient(to bottom, #ffffff, #c0c8e0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: jackpot-digit-roll 0.12s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Chữ số đã khóa: màu vàng kim + snap bounce + glow pulse mãi */
+.jackpot-digit-settled {
+  display: inline-block;
+  line-height: 1;
+}
+.jackpot-digit-settled span {
+  display: inline-block;
+  background: linear-gradient(to bottom, #fffef5 0%, #fef08a 45%, #ca8a04 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(180, 83, 9, 0.28);
+  animation:
+    jackpot-digit-settle-snap 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    jackpot-digit-glow-pulse 2.2s ease-in-out 0.45s infinite;
+  will-change: transform, filter;
+}
