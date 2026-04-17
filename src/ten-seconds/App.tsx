@@ -95,93 +95,6 @@ const FixedWidthTimeText = ({
   </span>
 );
 
-const SLOT_DIGITS = "0123456789";
-
-/** Một chữ số quay như slot machine rồi khóa vào đúng ký tự */
-const JackpotDigit = ({
-  targetChar,
-  slotIndex,
-  isDot,
-}: {
-  targetChar: string;
-  slotIndex: number;
-  isDot: boolean;
-}) => {
-  const [displayed, setDisplayed] = useState(() =>
-    isDot ? targetChar : SLOT_DIGITS[Math.floor(Math.random() * 10)],
-  );
-  const [settled, setSettled] = useState(isDot);
-
-  useEffect(() => {
-    if (isDot) return;
-
-    // Stagger bắt đầu theo thứ tự chữ số
-    const startDelay = slotIndex * 90; // ms
-    const spinDuration = 700 + slotIndex * 100; // ms — chữ số sau quay lâu hơn
-
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const startAt = performance.now() + startDelay;
-
-    const tick = () => {
-      const now = performance.now();
-      const elapsed = now - startAt;
-
-      if (elapsed < 0) {
-        timeoutId = setTimeout(tick, -elapsed);
-        return;
-      }
-
-      const progress = Math.min(elapsed / spinDuration, 1);
-
-      if (progress >= 1) {
-        setDisplayed(targetChar);
-        setSettled(true);
-        return;
-      }
-
-      // Interval tăng dần (quay nhanh → chậm) theo ease-out quadratic
-      const eased = 1 - Math.pow(1 - progress, 2.2);
-      const interval = 45 + eased * 160;
-
-      setDisplayed(SLOT_DIGITS[Math.floor(Math.random() * 10)]);
-      timeoutId = setTimeout(tick, interval);
-    };
-
-    timeoutId = setTimeout(tick, startDelay);
-    return () => clearTimeout(timeoutId);
-  }, [targetChar, slotIndex, isDot]);
-
-  return (
-    <span
-      className={cn(
-        isDot
-          ? "inline-block w-[0.55ch] shrink-0 text-center"
-          : "inline-block w-[1ch] shrink-0 text-center",
-        settled ? "jackpot-digit-settled" : "jackpot-digit-rolling",
-      )}
-    >
-      <span>{displayed}</span>
-    </span>
-  );
-};
-
-/**
- * Jackpot: toàn bộ số zoom vào nhanh kèm flash trắng, từng chữ số quay như
- * slot machine chậm dần rồi "click" khóa vào vị trí đúng với snap bounce + gold glow.
- */
-const JackpotTimeDisplay = ({ value }: { value: string }) => (
-  <span className="">
-    {value.split("").map((char, index) => (
-      <JackpotDigit
-        key={index}
-        targetChar={char}
-        slotIndex={index}
-        isDot={char === "."}
-      />
-    ))}
-  </span>
-);
-
 type TryAgainParticle = {
   id: number;
   xPct: number;
@@ -503,6 +416,17 @@ const CongratulationsBanner = ({ tier }: { tier: "jackpot" | "near" }) => {
           ))}
         </p>
       </div>
+      <p
+        className={cn(
+          "mt-1.5 font-main text-[clamp(0.65rem,1.8vw,0.9rem)] font-medium uppercase tracking-[0.28em]",
+          tier === "jackpot"
+            ? "text-amber-100/88 [text-shadow:0_0_18px_rgba(250,204,21,0.45)]"
+            : "text-white/75",
+        )}
+        aria-hidden
+      >
+        {"Ch\u00fac m\u1eebng b\u1ea1n"}
+      </p>
     </div>
   );
 };
@@ -977,7 +901,7 @@ function App() {
                         ? "Chúc mừng, bạn đã dừng đúng 10 giây"
                         : "Kết quả thử thách"}
                     </h2>
-                    <div className="flex flex-col items-center gap-[clamp(0.75rem,2.5vh,1.875rem)] self-stretch">
+                    <div className="flex flex-col items-center gap-0 self-stretch">
                       <div className="flex flex-col items-center gap-[6px]">
                         {prizeTier?.tier === "jackpot" && (
                           <span
@@ -993,6 +917,16 @@ function App() {
                             </span>
                           </span>
                         )}
+                        <p
+                          className={cn(
+                            "pb-6 text-center font-main text-3xl font-light leading-[0.87] [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]",
+                            prizeTier?.tier === "jackpot"
+                              ? "bg-gradient-to-b from-amber-50 to-amber-200/90 bg-clip-text text-transparent"
+                              : "text-white",
+                          )}
+                        >
+                          Bạn đạt được
+                        </p>
                         <div
                           className="flex items-baseline justify-center gap-[6px]"
                           aria-live="polite"
@@ -1001,19 +935,13 @@ function App() {
                             className={cn(
                               "font-technology text-[clamp(3.5rem,12vw,40rem)] leading-none",
                               prizeTier?.tier === "jackpot"
-                                ? ""
+                                ? "jackpot-time-gold"
                                 : "text-white [text-shadow:2px_2px_8px_rgba(1,35,127,0.6)] [-webkit-text-stroke:1px_#DCFAFF]",
                             )}
                           >
-                            {prizeTier?.tier === "jackpot" ? (
-                              <JackpotTimeDisplay
-                                value={formatSecondsDisplay(timer)}
-                              />
-                            ) : (
-                              <FixedWidthTimeText
-                                value={formatSecondsDisplay(timer)}
-                              />
-                            )}
+                            <FixedWidthTimeText
+                              value={formatSecondsDisplay(timer)}
+                            />
                           </p>
                           <span
                             className={cn(
