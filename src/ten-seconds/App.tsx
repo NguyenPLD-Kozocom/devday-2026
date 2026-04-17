@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import "./index.css";
 import mainImg from "./assets/main.png";
 import backgroundMp4 from "./assets/background.mp4";
 import gift1Img from "./assets/gift-1.png";
@@ -90,6 +91,93 @@ const FixedWidthTimeText = ({
       >
         {char}
       </span>
+    ))}
+  </span>
+);
+
+const SLOT_DIGITS = "0123456789";
+
+/** Một chữ số quay như slot machine rồi khóa vào đúng ký tự */
+const JackpotDigit = ({
+  targetChar,
+  slotIndex,
+  isDot,
+}: {
+  targetChar: string;
+  slotIndex: number;
+  isDot: boolean;
+}) => {
+  const [displayed, setDisplayed] = useState(() =>
+    isDot ? targetChar : SLOT_DIGITS[Math.floor(Math.random() * 10)],
+  );
+  const [settled, setSettled] = useState(isDot);
+
+  useEffect(() => {
+    if (isDot) return;
+
+    // Stagger bắt đầu theo thứ tự chữ số
+    const startDelay = slotIndex * 90; // ms
+    const spinDuration = 700 + slotIndex * 100; // ms — chữ số sau quay lâu hơn
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const startAt = performance.now() + startDelay;
+
+    const tick = () => {
+      const now = performance.now();
+      const elapsed = now - startAt;
+
+      if (elapsed < 0) {
+        timeoutId = setTimeout(tick, -elapsed);
+        return;
+      }
+
+      const progress = Math.min(elapsed / spinDuration, 1);
+
+      if (progress >= 1) {
+        setDisplayed(targetChar);
+        setSettled(true);
+        return;
+      }
+
+      // Interval tăng dần (quay nhanh → chậm) theo ease-out quadratic
+      const eased = 1 - Math.pow(1 - progress, 2.2);
+      const interval = 45 + eased * 160;
+
+      setDisplayed(SLOT_DIGITS[Math.floor(Math.random() * 10)]);
+      timeoutId = setTimeout(tick, interval);
+    };
+
+    timeoutId = setTimeout(tick, startDelay);
+    return () => clearTimeout(timeoutId);
+  }, [targetChar, slotIndex, isDot]);
+
+  return (
+    <span
+      className={cn(
+        isDot
+          ? "inline-block w-[0.55ch] shrink-0 text-center"
+          : "inline-block w-[1ch] shrink-0 text-center",
+        settled ? "jackpot-digit-settled" : "jackpot-digit-rolling",
+      )}
+    >
+      <span>{displayed}</span>
+    </span>
+  );
+};
+
+/**
+ * Jackpot: toàn bộ số zoom vào nhanh kèm flash trắng, từng chữ số quay như
+ * slot machine chậm dần rồi "click" khóa vào vị trí đúng với snap bounce + gold glow.
+ */
+const JackpotTimeDisplay = ({ value }: { value: string }) => (
+  <span className="">
+    {value.split("").map((char, index) => (
+      <JackpotDigit
+        key={index}
+        targetChar={char}
+        slotIndex={index}
+        isDot={char === "."}
+      />
     ))}
   </span>
 );
@@ -415,17 +503,6 @@ const CongratulationsBanner = ({ tier }: { tier: "jackpot" | "near" }) => {
           ))}
         </p>
       </div>
-      <p
-        className={cn(
-          "mt-1.5 font-main text-[clamp(0.65rem,1.8vw,0.9rem)] font-medium uppercase tracking-[0.28em]",
-          tier === "jackpot"
-            ? "text-amber-100/88 [text-shadow:0_0_18px_rgba(250,204,21,0.45)]"
-            : "text-white/75",
-        )}
-        aria-hidden
-      >
-        {"Ch\u00fac m\u1eebng b\u1ea1n"}
-      </p>
     </div>
   );
 };
@@ -639,6 +716,21 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState, stopTimer, handleStart, handleReset]);
 
+  // DEBUG: Shift+D → giả lập bấm đúng 10s (jackpot)
+  useEffect(() => {
+    const handleDebugKey = (e: KeyboardEvent) => {
+      if (e.key === "D" && e.shiftKey) {
+        if (animationFrame.current) {
+          cancelAnimationFrame(animationFrame.current);
+        }
+        setTimer(10);
+        setGameState("result");
+      }
+    };
+    window.addEventListener("keydown", handleDebugKey);
+    return () => window.removeEventListener("keydown", handleDebugKey);
+  }, []);
+
   const handleStopClick = () => {
     stopTimer();
   };
@@ -794,7 +886,7 @@ function App() {
       {gameState === "result" && (
         <div
           className={cn(
-            "animate-fadeIn fixed inset-0 z-50 flex items-center justify-center overflow-visible p-4",
+            "animate-fadeIn fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-[clamp(1.5rem,5vw,4rem)] py-[clamp(1rem,3vh,2.5rem)]",
             prizeTier?.tier === "jackpot"
               ? "bg-black/82 backdrop-blur-[4px]"
               : "bg-black/55 backdrop-blur-[2px]",
@@ -804,8 +896,16 @@ function App() {
           aria-labelledby="result-title"
         >
           {prizeTier?.tier === "jackpot" && <JackpotCelebrationLayer />}
+          {prizeTier?.tier === "jackpot" && (
+            <div className="jackpot-modal-flash" aria-hidden />
+          )}
           {prizeTier?.tier === "near" && <NearResultFireworks />}
-          <div className="relative z-[60] flex w-full max-w-[min(100%,1550px)] flex-col items-center gap-4 px-1 sm:gap-5 sm:px-2">
+          <div
+            className={cn(
+              "relative z-[60] flex w-full max-w-[min(100%,1550px)] flex-col items-center gap-3 px-1 sm:gap-4 sm:px-2",
+              prizeTier?.tier === "jackpot" && "jackpot-modal-enter",
+            )}
+          >
             {(prizeTier?.tier === "jackpot" || prizeTier?.tier === "near") && (
               <CongratulationsBanner tier={prizeTier.tier} />
             )}
@@ -828,7 +928,7 @@ function App() {
                 className={cn(
                   "animate-scaleIn relative w-full min-w-0 overflow-visible",
                   prizeTier?.tier === "jackpot"
-                    ? "jackpot-result-card-host max-w-[min(100%,820px)]"
+                    ? "jackpot-result-card-host max-w-[min(100%,680px)]"
                     : "max-w-[700px] rounded-[40px] bg-gradient-to-b from-[#35A3EF] to-[#0039BB] p-[4px] shadow-[0_8px_40px_rgba(0,0,0,0.45)]",
                 )}
               >
@@ -837,7 +937,7 @@ function App() {
                 )}
                 <div
                   className={cn(
-                    "relative z-10 overflow-visible px-6 py-10 backdrop-blur-[18px] sm:px-10 sm:py-[60px] md:px-20",
+                    "relative z-10 overflow-visible px-5 py-[clamp(1.25rem,2.5vh,2rem)] backdrop-blur-[18px] sm:px-8 sm:py-[clamp(1.5rem,4vh,3rem)] md:px-14",
                     prizeTier?.tier === "jackpot"
                       ? "jackpot-card-inner-premium m-[3px] rounded-[41px] ring-1 ring-amber-200/45"
                       : "rounded-[36px] bg-[rgba(1,41,161,0.8)]",
@@ -871,13 +971,13 @@ function App() {
                       />
                     </>
                   )}
-                  <div className="relative z-10 flex flex-col items-center gap-[30px] font-sans">
+                  <div className="relative z-10 flex flex-col items-center gap-[clamp(1rem,2.5vh,1.875rem)] font-sans">
                     <h2 id="result-title" className="sr-only">
                       {prizeTier?.tier === "jackpot"
                         ? "Chúc mừng, bạn đã dừng đúng 10 giây"
                         : "Kết quả thử thách"}
                     </h2>
-                    <div className="flex flex-col items-center gap-[30px] self-stretch">
+                    <div className="flex flex-col items-center gap-[clamp(0.75rem,2.5vh,1.875rem)] self-stretch">
                       <div className="flex flex-col items-center gap-[6px]">
                         {prizeTier?.tier === "jackpot" && (
                           <span
@@ -893,35 +993,31 @@ function App() {
                             </span>
                           </span>
                         )}
-                        <p
-                          className={cn(
-                            "pb-6 text-center font-main text-3xl font-light leading-[0.87] [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]",
-                            prizeTier?.tier === "jackpot"
-                              ? "bg-gradient-to-b from-amber-50 to-amber-200/90 bg-clip-text text-transparent"
-                              : "text-white",
-                          )}
-                        >
-                          Bạn đạt được
-                        </p>
                         <div
                           className="flex items-baseline justify-center gap-[6px]"
                           aria-live="polite"
                         >
                           <p
                             className={cn(
-                              "font-technology text-[clamp(3.5rem,14vw,8.125rem)] leading-none",
+                              "font-technology text-[clamp(3.5rem,12vw,40rem)] leading-none",
                               prizeTier?.tier === "jackpot"
-                                ? "[&>span>span]:bg-gradient-to-b [&>span>span]:from-[#fffef5] [&>span>span]:via-[#fef08a] [&>span>span]:to-[#ca8a04] [&>span>span]:bg-clip-text [&>span>span]:text-transparent [&>span>span]:drop-shadow-[0_4px_18px_rgba(250,204,21,0.5)] [&>span>span]:[-webkit-text-stroke:1px_rgba(180,83,9,0.28)]"
+                                ? ""
                                 : "text-white [text-shadow:2px_2px_8px_rgba(1,35,127,0.6)] [-webkit-text-stroke:1px_#DCFAFF]",
                             )}
                           >
-                            <FixedWidthTimeText
-                              value={formatSecondsDisplay(timer)}
-                            />
+                            {prizeTier?.tier === "jackpot" ? (
+                              <JackpotTimeDisplay
+                                value={formatSecondsDisplay(timer)}
+                              />
+                            ) : (
+                              <FixedWidthTimeText
+                                value={formatSecondsDisplay(timer)}
+                              />
+                            )}
                           </p>
                           <span
                             className={cn(
-                              "font-main text-[clamp(1.75rem,7vw,3.75rem)] font-medium uppercase leading-[0.87]",
+                              "font-main text-[clamp(1.5rem,5vw,3rem)] font-medium uppercase leading-1",
                               prizeTier?.tier === "jackpot"
                                 ? "text-amber-100 [text-shadow:0_0_16px_rgba(250,204,21,0.45),1px_2px_12px_rgba(0,0,0,0.35)]"
                                 : "text-white [text-shadow:1px_2px_12px_rgba(0,0,0,0.25)]",
@@ -948,7 +1044,7 @@ function App() {
                         />
                       )}
                     </div>
-                    <div className="flex w-full flex-col items-center gap-[50px]">
+                    <div className="flex w-full flex-col items-center gap-[clamp(1rem,4vh,3rem)]">
                       <div className="flex flex-col items-center gap-5">
                         {prizeTier && (
                           <>
@@ -964,7 +1060,7 @@ function App() {
                                 src={prizeTier.imageSrc}
                                 alt=""
                                 className={cn(
-                                  "relative z-[1] h-[300px] w-auto max-w-full select-none object-contain",
+                                  "relative z-[1] h-[min(200px,17vh)] w-auto max-w-full select-none object-contain",
                                   prizeTier.tier === "jackpot"
                                     ? "drop-shadow-[0_12px_36px_rgba(0,0,0,0.45),0_0_24px_rgba(250,204,21,0.25)]"
                                     : "drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)]",
@@ -988,7 +1084,7 @@ function App() {
                         type="button"
                         onClick={handleReset}
                         className={cn(
-                          "cursor-pointer flex min-h-[90px] w-full items-center justify-center rounded-[60px] border-[3px] border-[#9DD7FF] bg-white px-10 text-[clamp(1.25rem,3.2vw,2.5rem)] font-bold uppercase leading-[1.05] text-[#012A9E] shadow-[0_4px_18px_rgba(0,0,0,0.25)] transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(1,41,161,0.8)] font-main",
+                          "cursor-pointer flex min-h-[clamp(56px,8vh,90px)] w-full items-center justify-center rounded-[60px] border-[3px] border-[#9DD7FF] bg-white px-10 text-[clamp(1.25rem,3.2vw,2.5rem)] font-bold uppercase leading-[1.05] text-[#012A9E] shadow-[0_4px_18px_rgba(0,0,0,0.25)] transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9DD7FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(1,41,161,0.8)] font-main",
                           prizeTier?.tier === "jackpot" &&
                             "border-2 border-amber-200/90 bg-gradient-to-b from-[#fffef5] via-[#fef9c3] to-[#fde68a] font-black text-amber-950 shadow-[0_0_36px_rgba(250,204,21,0.55),0_6px_24px_rgba(0,0,0,0.35)] hover:brightness-[1.02] focus-visible:ring-amber-300",
                         )}

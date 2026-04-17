@@ -32,18 +32,10 @@ const CRUISE_ROTATIONS = 22; // Phase 3: constant full speed
 const DECEL_ROTATIONS = 4; // Phase 4: full speed → slow
 const TOTAL_ROTATIONS = ACCEL_ROTATIONS + CRUISE_ROTATIONS + DECEL_ROTATIONS; // 30
 
-const TICK_STEPS = 9; // Phase 5: discrete individual ticks
-const OVERSHOOT_STEPS = 2; // Phase 6: rows to bounce past target
-
-// Total spin ≈ 2.2 + 6.5 + 2.8 + ~2.8 (ticks) + ~0.7 (spring) ≈ 15 s
+// Total spin ≈ 2.2 + 6.5 + 4.5 ≈ 13 s
 const ACCEL_PHASE_SEC = 2.2; // Phase 2 duration
 const CRUISE_PHASE_SEC = 6.5; // Phase 3 duration
-const DECEL_PHASE_SEC = 2.8; // Phase 4 duration
-const TICK_BASE_DELAY_MS = 55; // pause before first tick
-const TICK_INCREMENT_MS = 38; // each tick waits this much longer
-const TICK_STEP_SEC = 0.13; // single tick animation duration
-
-const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
+const DECEL_PHASE_SEC = 4.5; // Phase 4 duration — dài hơn, lướt chậm tới đích
 
 export type VerticalReelMode = "idle" | "spinning" | "locked";
 
@@ -110,9 +102,7 @@ export default function VerticalReel({
   const finalRowIndex = rowsTravel + safeTargetValue;
 
   // Phase boundary row indices (high → low as the reel scrolls)
-  const tickSteps = Math.min(TICK_STEPS, digitCount - 1);
-  const decelEndRowIndex = finalRowIndex + tickSteps; // end of decel / start of ticks
-  const cruiseEndRowIndex = decelEndRowIndex + DECEL_ROTATIONS * digitCount; // end of cruise / start of decel
+  const cruiseEndRowIndex = finalRowIndex + DECEL_ROTATIONS * digitCount; // end of cruise / start of decel
   const accelEndRowIndex = cruiseEndRowIndex + CRUISE_ROTATIONS * digitCount; // end of accel / start of cruise
 
   const startDigit =
@@ -192,14 +182,7 @@ export default function VerticalReel({
     const iY = toY(initialRowIndex); // Phase 1: start (snap)
     const aeY = toY(accelEndRowIndex); // Phase 2→3 boundary
     const ceY = toY(cruiseEndRowIndex); // Phase 3→4 boundary
-    const deY = toY(decelEndRowIndex); // Phase 4→5 boundary
     const fY = toY(finalRowIndex); // exact target
-
-    // Discrete tick Y-positions (decelEndRowIndex → finalRowIndex step by step)
-    const tickYs: number[] = [];
-    for (let s = tickSteps - 1; s >= 0; s--) {
-      tickYs.push(toY(finalRowIndex + s));
-    }
 
     yMotion.set(iY);
     blurMotion.set(0);
@@ -226,49 +209,14 @@ export default function VerticalReel({
       await cruise;
       if (cancelled) return;
 
-      // ── Phase 4: DECELERATE ──────────────────────────────────────────────
-      const decel = animate(yMotion, deY, {
+      // ── Phase 4: DECELERATE → dừng hẳn tại số đích ────────────────────
+      // ease [0, 0, 0.05, 1]: giảm tốc mạnh, lướt rất chậm ở cuối
+      const decel = animate(yMotion, fY, {
         duration: DECEL_PHASE_SEC,
-        ease: [0, 0, 0.3, 1], // easeOutCubic — smooth brake
+        ease: [0, 0, 0.05, 1],
       });
       stoppers.push(() => decel.stop());
       await decel;
-      if (cancelled) return;
-
-      // ── Phase 5: TICK TICK TICK ──────────────────────────────────────────
-      // discrete step-by-step; each pause grows longer (click-wheel feel)
-      for (let i = 0; i < tickYs.length; i++) {
-        const delayMs = TICK_BASE_DELAY_MS + i * TICK_INCREMENT_MS;
-        await sleep(delayMs);
-        if (cancelled) return;
-
-        const tick = animate(yMotion, tickYs[i], {
-          duration: TICK_STEP_SEC,
-          ease: [0.33, 0, 0.66, 1],
-        });
-        stoppers.push(() => tick.stop());
-        onTickRef.current?.();
-        await tick;
-        if (cancelled) return;
-      }
-
-      // ── Phase 6 + 7: OVERSHOOT → SPRING LOCK ───────────────────────────
-      // A single spring with negative initial velocity naturally shoots past
-      // the target then springs back — no hard cut between two phases.
-      // velocity is in px/s; negative = continuing in the scroll direction
-      // (further up), so the spring overshoots then settles on fY.
-      await sleep(60);
-      if (cancelled) return;
-
-      const spring = animate(yMotion, fY, {
-        type: "spring",
-        stiffness: 280,
-        damping: 38,
-        mass: 1.0,
-        velocity: -(rowH * OVERSHOOT_STEPS * 6),
-      });
-      stoppers.push(() => spring.stop());
-      await spring;
       if (cancelled) return;
 
       setShakeKey((k) => k + 1);
